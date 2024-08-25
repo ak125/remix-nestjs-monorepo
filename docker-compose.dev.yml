@@ -1,0 +1,11 @@
+services:
+  monorepo_dev:
+    container_name: nestjs-remix-monorepo-dev
+    environment:
+      - NODE_ENV=development
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
