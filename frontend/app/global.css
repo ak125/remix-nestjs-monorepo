@@ -1,8 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 @layer base {
   :root {
+    /* Variables pour le mode clair */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -27,9 +29,11 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem
+    --radius: 0.5rem;
   }
+
   .dark {
+    /* Variables pour le mode sombre */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -53,14 +57,139 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
-}
-@layer base {
+
+  /* Application des bordures globales */
   * {
     @apply border-border;
   }
+
+  /* Styles de base pour le corps du document */
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Transitions pour les boutons, liens, modales et dropdown */
+  button, a, .modal, .dropdown {
+    transition: transform 0.3s ease, background-color 0.3s ease, opacity 0.3s ease;
+  }
+
+  button:hover, a:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  button:active, a:active {
+    transform: scale(0.98);
+  }
+
+  /* Effet d'apparition pour les modales */
+  .modal-enter {
+    animation: fadeIn 0.3s ease forwards, slideUp 0.3s ease forwards;
+  }
+
+  .modal-leave {
+    animation: fadeOut 0.3s ease forwards, slideDown 0.3s ease forwards;
+  }
+
+  /* Animations d'apparition et disparition */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(20px);
+    }
+  }
+
+  /* Styles pour les notifications */
+  .notification-enter {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .notification-exit {
+    animation: slideOut 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  /* Styles pour les étapes de progression */
+  .progress-step {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .progress-step.active {
+    background-color: var(--primary);
+  }
+
+  .progress-step.inactive {
+    background-color: var(--gray);
+  }
+
+  /* Focus amélioré pour l'accessibilité */
+  button:focus, a:focus {
+    outline: 4px solid var(--primary);
+    outline-offset: 4px;
+    transition: outline 0.2s ease-in-out;
+  }
+
+  input:focus, select:focus {
+    outline: 2px solid var(--primary);
+    background-color: var(--secondary);
+  }
+
+  /* Adaptation pour le mode sombre */
+  body.dark {
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }

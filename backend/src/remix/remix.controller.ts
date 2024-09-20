@@ -14,12 +14,14 @@ export class RemixController {
     @Res() response: Response,
     @Next() next: NextFunction,
   ) {
-    //
+    // Ensure getServerBuild is properly awaited and its return type is handled
+    const build = await getServerBuild() as any; // Cast to 'any' or the appropriate type
+
     return createRequestHandler({
-      build: await getServerBuild(),
+      build: build, // Make sure build is correctly assigned
       getLoadContext: () => ({
-        fafa: 'Slm Remix',
-        remixService: this.remixService,
+        user: request.user,       // Ensure there's no duplicate
+        remixService: this.remixService, // Ensure there's no duplicate
       }),
     })(request, response, next);
   }
