@@ -1,26 +1,28 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { PrismaService } from '../prisma/prismaservices'; // Modifiez selon vos besoins
+import { PrismaService } from '../prisma/prisma.services'; // Assurez-vous que le chemin est correct
+import { AuthController } from './auth.controller'; // Importer le contrôleur d'authentification
+import { AuthService } from './auth.service';
 import { CookieSerializer } from './cookie-serializer';
 import { LocalAuthGuard } from './local-auth.guard';
-import { LocalStrategy } from './local.strategy'; // Assurez-vous que le chemin est correct
+import { LocalStrategy } from './local.strategy';
 
 @Module({
   imports: [
     PassportModule.register({
       defaultStrategy: 'local',
       property: 'user',
-      session: true, // Activer les sessions si nécessaire
+      session: true,
     }),
   ],
+  controllers: [AuthController], // Ajouter le contrôleur ici
   providers: [
-    LocalStrategy,     // Assurez-vous que LocalStrategy est bien importé ici
-    LocalAuthGuard,    // Importation des autres services/guard
+    LocalStrategy,
+    LocalAuthGuard,
     CookieSerializer,
-    PrismaService,     // Assurez-vous que PrismaService est bien importé
+    PrismaService,
+    AuthService,
   ],
-  controllers: [],      // Ajoutez des controllers ici si nécessaire
+  exports: [AuthService],
 })
 export class AuthModule {}
-
-

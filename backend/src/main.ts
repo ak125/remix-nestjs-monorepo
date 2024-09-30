@@ -1,4 +1,4 @@
-import { getPublicDir, startDevServer } from '@fafa/frontend';
+import { getPublicDir } from '@fafa/frontend';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { urlencoded } from 'body-parser';
@@ -42,8 +42,8 @@ async function bootstrap() {
   // Initialize Passport.
   app.use(passport.initialize());
   app.use(passport.session());
-  app.use("/auth/login", urlencoded({ extended: true })); // Add this line;
-  app.use("/auth/logout", urlencoded({ extended: true })); // Add this line;
+  app.use('/auth/login', urlencoded({ extended: true })); // Add this line;
+  app.use('/auth/logout', urlencoded({ extended: true })); // Add this line;
 
   // Serve static assets.
   app.useStaticAssets(getPublicDir(), {
@@ -52,15 +52,12 @@ async function bootstrap() {
     index: false,
   });
 
-  // Start development server.
-  await startDevServer(app);
-
-  // Get port from environment variable or use default.
-  const selectedPort = process.env.PORT ?? 3000;
+  // Obtenir le port à partir de la variable d'environnement ou utiliser la valeur par défaut.
+  const selectedPort = process.env.PORT || 3000;
 
   console.log(`Running on port http://localhost:${selectedPort}`);
   await app.listen(selectedPort);
 }
 
-// Start the application.
+// Démarrer l'application.
 bootstrap();

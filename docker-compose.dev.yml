@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   monorepo_dev:
     environment:
@@ -9,18 +11,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # image: fafa/nestjs-remix-monorepo:dev
     restart: always
     ports:
       - 3000:3000
+
   redis_dev:
     image: redis:latest
     restart: always
     ports:
-      - '6379:6379'
-    command: ["redis-server"] 
-    # --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    volumes: 
+      - "6379:6379"
+    command: ["redis-server"]
+    volumes:
       - ./cache:/data
-      # - /dev/volumes/nestjs-remix/dev/sessions/:/data
-

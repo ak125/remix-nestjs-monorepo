@@ -1,37 +1,48 @@
-import { Controller, Get, Next, Post, Query, Redirect, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Next,
+  Post,
+  Query,
+  Redirect,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { NextFunction, Response } from 'express';
 import { LocalAuthGuard } from './local-auth.guard';
 
-@Controller()
+@Controller('api') // You can change this base path if needed
 export class AuthController {
-    @UseGuards(LocalAuthGuard)
-    @Get('/authenticate')
-    @Redirect('/')
-    login(
-        @Query('redirectTo') redirectTo: string,
-    ) {
-        return {
-            url: redirectTo
-        }
-    }
+  @UseGuards(LocalAuthGuard)
+  @Post('/login') // Define the route for login
+  login(@Req() request: Express.Request) {
+    // You can add additional logic here if needed
+    return { message: 'Login successful', user: request.user };
+  }
 
-    @Post('auth/logout')
-    async logout(
-        @Req() request: Express.Request,
-        @Res() response: Response,
-        @Next() next: NextFunction,
-    ) {
-        // this will ensure that re-using the old session id
-        // does not have a logged in user
-        request.logOut(function (err) {
-            if (err) {
-                return next(err);
-            }
-            // Ensure the session is destroyed and the user is redirected.
-            request.session.destroy(() => {
-                response.clearCookie('connect.sid'); // The name of the cookie where express/connect stores its session_id
-                response.redirect('/'); // Redirect to website after logout
-            });
-        });
-    }
+  @Get('/authenticate')
+  @Redirect('/')
+  authenticate(@Query('redirectTo') redirectTo: string) {
+    return {
+      url: redirectTo || '/',
+    };
+  }
+
+  @Post('/logout') // Define the route for logout
+  async logout(
+    @Req() request: Express.Request,
+    @Res() response: Response,
+    @Next() next: NextFunction,
+  ) {
+    request.logOut(function (err) {
+      if (err) {
+        return next(err);
+      }
+      request.session.destroy(() => {
+        response.clearCookie('connect.sid'); // The name of the session cookie
+        response.redirect('/'); // Redirect to homepage after logout
+      });
+    });
+  }
 }

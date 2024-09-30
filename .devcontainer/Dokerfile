@@ -1,0 +1,30 @@
+# Utiliser une image de base Ubuntu
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu
+
+# Installer Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+	&& apt-get install -y nodejs
+
+# Installer Docker CLI
+RUN apt-get update && apt-get install -y docker-ce-cli
+
+# Installer Turbo
+RUN npm install --global turbo
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /workspace
+
+# Copier les fichiers package.json et package-lock.json dans le répertoire de travail
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm install
+
+# Copier le reste des fichiers de l'application dans le répertoire de travail
+COPY . .
+
+# Exposer le port sur lequel l'application va écouter
+EXPOSE 3000
+
+# Démarrer l'application
+CMD ["npm", "run", "start:dev"]

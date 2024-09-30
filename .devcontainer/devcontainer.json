@@ -1,25 +1,26 @@
 {
   "name": "Node.js Monorepo (NestJS + Express + Redis)",
-  "dockerComposeFile": "docker-compose.yml",  // Fichier Docker Compose utilisé
-  "service": "nestjs",  // Service principal pour l'application NestJS
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "nestjs",
   "workspaceFolder": "/workspace",
   "extensions": [
-    "dbaeumer.vscode-eslint",  // ESLint pour linting du code
-    "ms-azuretools.vscode-docker",  // Docker extension
-    "eamodio.gitlens",  // Extension GitLens pour Git
-    "esbenp.prettier-vscode",  // Prettier pour formatage du code
-    "mongodb.mongodb-vscode"  // Extension Postman/MongoDB pour tester les API
+    "dbaeumer.vscode-eslint",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "mongodb.mongodb-vscode"
   ],
   "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"  // Utilisation de bash comme shell par défaut
+    "terminal.integrated.shell.linux": "/bin/bash"
   },
-  "postCreateCommand": "npm install",  // Installer les dépendances pour les projets
-  "forwardPorts": [3000, 3001, 6379],  // Expose les ports pour Express (3000), NestJS (3001), et Redis (6379)
-  "remoteUser": "node",  // Utilisateur dans le conteneur Docker
-  "mounts": [  // Montages des volumes pour les projets Node.js
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000, 3001, 6379],
+  "remoteUser": "node",
+  "mounts": [
     "source=${localWorkspaceFolder}/apps/nestjs-app,target=/workspace/apps/nestjs-app,type=bind",
     "source=${localWorkspaceFolder}/apps/express-app,target=/workspace/apps/express-app,type=bind"
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  }
 }
-
-

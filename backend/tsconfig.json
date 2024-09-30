@@ -9,8 +9,7 @@
     "noEmit": false,
     "lib": ["DOM", "ES2023"],
     "esModuleInterop": true,
-    "diagnostics": true  
+    "diagnostics": true
   },
   "include": ["src/**/*.ts", "src/exports.js"]
 }
-

@@ -1,8 +1,12 @@
 // Utilisation de `import type` pour les types
-import { type RemixService } from '@fafa/backend';
+import { type RemixService } from "@fafa/backend";
 
 // Import des composants React
-import { json, type LinksFunction, type LoaderFunctionArgs } from '@remix-run/node'; // Utilisation de `import type`
+import {
+  json,
+  type LinksFunction,
+  type LoaderFunctionArgs,
+} from "@remix-run/node"; // Utilisation de `import type`
 import {
   Links,
   Meta,
@@ -13,8 +17,10 @@ import {
 } from "@remix-run/react";
 
 // Import du fichier CSS et types Remix
+import { Navbar } from "./components/Navbar";
 import stylesheet from "./global.css";
-import { getOptionalUser } from './server/auth.server';
+import logo from "./routes/_assets/automecanik-logo.png";
+import { getOptionalUser } from "./server/auth.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
@@ -22,18 +28,18 @@ export const links: LinksFunction = () => [
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const user = await getOptionalUser({ context });
-  return json({ 
+  return json({
     user, // Correction : passer `user` au lieu de `User`
   });
 };
 
 export const useOptionalUser = () => {
-  const data = useRouteLoaderData<typeof loader>('root'); // Correction de la syntaxe de `useRouteLoaderData`
-  
+  const data = useRouteLoaderData<typeof loader>("root"); // Correction de la syntaxe de `useRouteLoaderData`
+
   if (!data?.user) {
-    throw new Error('Root loader is missing user data'); // Correction de la syntaxe de l'erreur
+    throw new Error("Root loader is missing user data"); // Correction de la syntaxe de l'erreur
   }
-  
+
   return data.user;
 };
 
@@ -53,7 +59,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className='min-h-full'>
+      <body className="min-h-full">
+        <Navbar logo={logo} />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -65,5 +72,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return <Outlet />;
 }
-
-

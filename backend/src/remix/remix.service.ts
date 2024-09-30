@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prismaservices';
+import { PrismaService } from '../prisma/prisma.services';
 
 @Injectable()
 export class RemixService {
@@ -24,6 +24,3 @@ export class RemixService {
     });
   };
 }
-
-
-

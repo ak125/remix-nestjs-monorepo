@@ -6,7 +6,7 @@
     "**/*.tsx",
     "../playwright.config.ts",
     "tailwind.config.cjs",
-    "global.d.ts" 
+    "global.d.ts"
   ],
   "exclude": ["index.d.cts"],
   "compilerOptions": {
