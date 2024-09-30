@@ -1,18 +1,17 @@
 {
-  "$schema": "https://json.schemastore.org/package",
   "name": "nestjs-remix-monorepo",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "turbo dev",
+    "dev": "NODE_ENV=development turbo dev",
     "lint": "turbo lint",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "start": "cd backend && npm run start",
-    "clean-node-modules": "rimraf  {node_modules,package-lock.json} **/{node_modules,package-lock.json}",
-    "clean-turbo-cache": "rimraf .turbo **/.turbo"
+    "clean-node-modules": "rm -rf {node_modules,package-lock.json} **/{node_modules,package-lock.json}",
+    "clean-turbo-cache": "rm -rf .turbo **/.turbo"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +23,9 @@
     "packages/*"
   ],
   "devDependencies": {
-    "turbo": "^2.0.14",
-    "typescript": "^5.1.6"
+    "turbo": "^1.13.0"
+  },
+  "dependencies": {
+    "@fafa/typescript-config": "^1.0.0"
   }
 }

@@ -1,4 +1,17 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "extends": "./tsconfig.json",  // Utilise les options de base de tsconfig.json
+  "compilerOptions": {
+    "outDir": "./dist",          // Répertoire de sortie des fichiers compilés
+    "rootDir": "./src",          // Répertoire source pour la compilation
+    "noEmit": false,             // Permet d'émettre les fichiers compilés
+    "declaration": true,         // Génère des fichiers .d.ts pour chaque fichier compilé
+    "removeComments": true       // Supprime les commentaires dans les fichiers générés
+  },
+  "exclude": [
+    "node_modules",              // Exclut les dépendances
+    "test",                      // Exclut les dossiers de test
+    "dist",                      // Exclut les fichiers compilés précédemment
+    "**/*spec.ts"                // Exclut les fichiers de test unitaires
+  ]
 }
+

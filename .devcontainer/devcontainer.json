@@ -1,0 +1,26 @@
+{
+  "name": "Node.js Monorepo (NestJS + Express + Redis)",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "nestjs",
+  "workspaceFolder": "/workspace",
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "mongodb.mongodb-vscode"
+  ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000, 3001, 6379],
+  "remoteUser": "node",
+  "mounts": [
+    "source=${localWorkspaceFolder}/apps/nestjs-app,target=/workspace/apps/nestjs-app,type=bind",
+    "source=${localWorkspaceFolder}/apps/express-app,target=/workspace/apps/express-app,type=bind"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
