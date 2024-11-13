@@ -69,18 +69,26 @@ jobs:
       - name: 🔎 Type check
         run: npm run typecheck --if-present
 
+  # Retrait de la section `uses` pour `build` (précédemment problématique)
   build:
-    name: 🐳 build
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
+    name: 🐳 Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Exemple d'étape de construction Docker
+      - name: Build and push Docker image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker build -t your-image-name .
+          docker push your-image-name
 
   deploy:
     name: 🚀 Deploy
     runs-on: [self-hosted]
     needs: [build, lint, typecheck]
-    # needs: [build]
-    # only build/deploy main branch on pushes
-    # if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push' }}
     if: ${{ (github.ref == 'refs/heads/main') && github.event_name == 'push' }}
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -103,14 +111,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      #   - name: 🚀 Run Docker Compose on Staging
-      #     if: ${{ github.ref == 'refs/heads/dev' }}
-      #     env:
-      #       NODE_ENV: staging
-      #     run: |
-      #       docker pull massdoc/nestjs-remix-monorepo:latest
-      #       docker compose -f docker-compose.staging.yaml up -d
-      #       docker system prune --all --volumes --force
 
       - name: 🚀 Run Docker Compose on Production
         if: ${{ github.ref == 'refs/heads/main' }}
@@ -121,3 +121,4 @@ jobs:
           docker pull massdoc/nestjs-remix-monorepo:production
           docker compose -f docker-compose.prod.yml up -d
           docker system prune --all --volumes --force
+
