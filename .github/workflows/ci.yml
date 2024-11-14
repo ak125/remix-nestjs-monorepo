@@ -87,7 +87,7 @@ jobs:
 
   deploy:
     name: 🚀 Deploy
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     needs: [build, lint, typecheck]
     if: ${{ (github.ref == 'refs/heads/main') && github.event_name == 'push' }}
     env:
