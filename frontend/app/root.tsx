@@ -1,14 +1,21 @@
-import  { type RemixService } from "@fafa/backend";
-import  { type LinksFunction } from "@remix-run/node";
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
+import { type RemixService } from "@fafa/backend";
+import { type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
+import { Link, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "@remix-run/react";
 
-import "./tailwind.css";
+import { Navbar } from "./components/Navbar";
+import stylesheet from "./global.css?url";
+import logo from "./routes/_assets/logo-automecanik-dark.png";
+import { Footer } from "./components/ui/Footer";
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: stylesheet },
+];
+
+export const loader = async ({ context }: LoaderFunctionArgs) => {
+  return json({
+    message: context.remixService.getHello()
+  });
+};
 
 declare module "@remix-run/node" {
   interface AppLoadContext {
@@ -17,30 +24,26 @@ declare module "@remix-run/node" {
   }
 }
 
-export const links: LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
-
 export function Layout({ children }: { children: React.ReactNode }) {
+  useLoaderData<typeof loader>();
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
-        {children}
+      <body className="h-full bg-gray-100">
+        <div className="min-h-screen flex flex-col">
+          <Navbar logo={logo} />
+          <main className="flex-grow flex flex-col">
+            <div className="flex-grow">
+              {children}
+            </div>
+           </main>
+        </div>
+        <Footer />
         <ScrollRestoration />
         <Scripts />
       </body>

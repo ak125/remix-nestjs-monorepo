@@ -18,7 +18,7 @@ export class RemixController {
     return createRequestHandler({
       build: await getServerBuild(),
       getLoadContext: () => ({
-        fafa: 'machAllah',
+        fafa: 'SLM',
         remixService: this.remixService,
       }),
     })(request, response, next);

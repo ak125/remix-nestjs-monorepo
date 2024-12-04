@@ -23,8 +23,20 @@
     "packages/*"
   ],
   "devDependencies": {
-    "eslint-plugin-remix-react-routes": "^1.0.5",
     "turbo": "^2.2.3",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@remix-run/dev": "^2.14.0",
+    "@remix-run/express": "^2.14.0",
+    "@remix-run/node": "^2.14.0",
+    "@remix-run/react": "^2.14.0",
+    "@remix-run/serve": "^2.14.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "prettier": "^3.4.1",
+    "remix-flat-routes": "^0.6.5",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.4.11"
   }
 }
