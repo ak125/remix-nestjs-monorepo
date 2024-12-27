@@ -1,1 +1,1 @@
-{"root":["./src/app.controller.ts","./src/app.module.ts","./src/app.service.ts","./src/main.ts","./src/remix/remix.controller.ts","./src/remix/remix.service.ts"],"version":"5.7.2"}
+{"root":["./src/app.controller.ts","./src/app.module.ts","./src/app.service.ts","./src/main.ts","./src/auth/auth.controller.ts","./src/auth/auth.module.ts","./src/auth/auth.service.ts","./src/auth/cookie-serializer.ts","./src/auth/local-auth.guard.ts","./src/auth/local.strategy.ts","./src/prisma/prisma.service.ts","./src/remix/remix.controller.ts","./src/remix/remix.service.ts"],"version":"5.7.2"}

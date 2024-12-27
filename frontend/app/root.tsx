@@ -1,31 +1,41 @@
 import { type RemixService } from "@fafa/backend";
-import { type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
-import { Link, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "@remix-run/react";
+import { AppLoadContext, type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData } from "@remix-run/react";
 
 import { Navbar } from "./components/Navbar";
 import stylesheet from "./global.css?url";
 import logo from "./routes/_assets/logo-automecanik-dark.png";
 import { Footer } from "./components/ui/Footer";
+import { getOptionalUser } from "./server/auth.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
-export const loader = async ({ context }: LoaderFunctionArgs) => {
-  return json({
-    message: context.remixService.getHello()
-  });
+export const loader = async ({ request,context }: LoaderFunctionArgs) => {
+  const user = await getOptionalUser({ context });
+  return json({ 
+    user
+    });
 };
+
+export const useOptionalUser = () => {
+  const data = useRouteLoaderData<typeof loader>("root");
+
+  if (!data) {
+    throw new Error('Root loader was not run');
+  }
+  return data.user;
+}
 
 declare module "@remix-run/node" {
   interface AppLoadContext {
-    fafa: string;
     remixService: RemixService; // Changed from 'any' to 'RemixService'
+    user: unknown
   }
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  useLoaderData<typeof loader>();
   return (
     <html lang="en" className="h-full">
       <head>

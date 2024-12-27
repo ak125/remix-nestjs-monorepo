@@ -25,7 +25,8 @@
     "react-dom": "^18.2.0",
     "remix-flat-routes": "^0.6.5",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@fafa/eslint-config": "*",
