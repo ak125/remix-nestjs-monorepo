@@ -16,7 +16,7 @@
     "build": "tsc --build",
     "prisma:prestart": "prisma generate",
     "start": "node dist/main",
-    "lint": "eslint 'src/**/*.ts' 'apps/**/*.ts' 'libs/**/*.ts' 'test/**/*.ts'",
+    "lint": "eslint 'src/**/*.ts'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

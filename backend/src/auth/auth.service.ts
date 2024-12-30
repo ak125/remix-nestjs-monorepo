@@ -37,7 +37,7 @@ export class AuthService {
     console.log('Utilisateur trouvé :', existingUser);
 
     if (!existingUser) {
-      console.log("Erreur : utilisateur introuvable.");
+      console.log('Erreur : utilisateur introuvable.');
       return {
         message: "L'email est invalide",
         error: true,
@@ -46,16 +46,25 @@ export class AuthService {
 
     if (withPassword) {
       console.log('Validation du mot de passe activée.');
-      console.log('Mot de passe haché de l’utilisateur :', existingUser.password);
+      console.log(
+        'Mot de passe haché de l’utilisateur :',
+        existingUser.password,
+      );
 
       // Comparaison des mots de passe
-      const isPasswordValid = await compare(password, existingUser.password || '');
-      console.log('Résultat de la comparaison du mot de passe :', isPasswordValid);
+      const isPasswordValid = await compare(
+        password,
+        existingUser.password || '',
+      );
+      console.log(
+        'Résultat de la comparaison du mot de passe :',
+        isPasswordValid,
+      );
 
       if (!isPasswordValid) {
-        console.log("Erreur : mot de passe invalide.");
+        console.log('Erreur : mot de passe invalide.');
         return {
-          message: "Le mot de passe est invalide",
+          message: 'Le mot de passe est invalide',
           error: true,
         };
       }
@@ -78,7 +87,10 @@ export class AuthService {
     password: string;
   }) => {
     const hashedPassword = await hash(password, PASSWORD_SALT);
-    console.log('Création de l’utilisateur avec un mot de passe haché :', hashedPassword);
+    console.log(
+      'Création de l’utilisateur avec un mot de passe haché :',
+      hashedPassword,
+    );
     return await this.prisma.user.create({
       data: {
         email: email.toLowerCase(),
@@ -93,11 +105,7 @@ export class AuthService {
     });
   };
 
-  public readonly authenticateUser = async ({
-    email,
-  }: {
-    email: string;
-  }) => {
+  public readonly authenticateUser = async ({ email }: { email: string }) => {
     console.log('Authentification de l’utilisateur avec email :', email);
     return await this.prisma.session.create({
       data: {

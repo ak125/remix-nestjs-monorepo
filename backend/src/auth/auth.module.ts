@@ -7,15 +7,21 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { LocalStrategy } from './local.strategy';
 
 @Module({
-    imports: [
-        PassportModule.register({
-            defaultStrategy: 'local',
-            property: 'user',
-            session: true
-        })
-    ],
-    controllers: [],
-    providers: [LocalStrategy, LocalAuthGuard, CookieSerializer, PrismaService, AuthService],
-    exports: [AuthService]
+  imports: [
+    PassportModule.register({
+      defaultStrategy: 'local',
+      property: 'user',
+      session: true,
+    }),
+  ],
+  controllers: [],
+  providers: [
+    LocalStrategy,
+    LocalAuthGuard,
+    CookieSerializer,
+    PrismaService,
+    AuthService,
+  ],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}
