@@ -1,15 +1,15 @@
-import { AppLoadContext, redirect } from "@remix-run/node";
+import { redirect, type AppLoadContext } from "@remix-run/node";
 import { z } from "zod";
 
-const authentictadUserSchema = z.object({
+const authentictedUserSchema = z.object({
   id: z.coerce.string(),
   email: z.string(),
-  name: z.string(),
+  name: z.string().optional(),
 });
 
 
 export const getOptionalUser =async ({ context }:{ context: AppLoadContext }) => {
-  const user = authentictadUserSchema.optional().nullable().parse(context.user);
+  const user = authentictedUserSchema.optional().nullable().parse(context.user);
   if (user) {
     return await context.remixService.getUser({
       userId: user.id 

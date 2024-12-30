@@ -1,5 +1,3 @@
-import { Button } from "../components/ui/button";
-
 export default function Index() {
   return (
     <div className="flex flex-col gap-3">

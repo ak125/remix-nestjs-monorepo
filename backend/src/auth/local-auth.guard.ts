@@ -9,9 +9,9 @@ import {
   export class LocalAuthGuard extends AuthGuard('local') {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<any>();
-       // request.body = {};
-       // request.body.email = "automecanik.seo@gmail.com";
-       // request.body.password = "123";
+        request.body = {};
+        request.body.email = "automecanik.seo@gmail.com";
+        request.body.password = "123";
         
       // Add your custom authentication logic here
       const canBeActivated = await super.canActivate(context) as boolean;

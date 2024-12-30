@@ -1,11 +1,11 @@
 import { type RemixService } from "@fafa/backend";
-import { AppLoadContext, type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
+import { type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData } from "@remix-run/react";
-
+import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+// @ts-ignore
 import stylesheet from "./global.css?url";
 import logo from "./routes/_assets/logo-automecanik-dark.png";
-import { Footer } from "./components/ui/Footer";
 import { getOptionalUser } from "./server/auth.server";
 
 export const links: LinksFunction = () => [

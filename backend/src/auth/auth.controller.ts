@@ -5,12 +5,12 @@ import { LocalAuthGuard } from './local-auth.guard';
 @Controller()
 export class AuthController {
   @UseGuards(LocalAuthGuard)
-  @Post('auth/login')
+  @Get('/authenticate')
   @Redirect('/')
-  async login(@Req() req: Express.Request) {
-    console.log({ requestUser: req.user });
-    // return req.user;
+  login() {
+    
   }
+
   @Post('auth/logout')
   async logout(
       @Req() request: Express.Request,

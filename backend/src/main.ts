@@ -8,6 +8,7 @@ import session from 'express-session';
 import Redis from 'ioredis';
 import passport from 'passport';
 import { urlencoded, json } from 'body-parser';
+import { HttpExceptionFilter } from './auth/exception.filter';
 
 const redisStoreFactory = RedisStore(session);
 
@@ -52,6 +53,8 @@ async function bootstrap() {
       index: false,
     });
     console.log('Assets statiques configurés.');
+
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     app.use(passport.initialize());
     app.use(passport.session());
