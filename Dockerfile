@@ -59,7 +59,7 @@ COPY --chown=remix-api:nodejs --from=installer /app/node_modules ./node_modules
 COPY --chown=remix-api:nodejs --from=installer /app/node_modules/@fafa/frontend ./node_modules/@fafa/frontend
 COPY --chown=remix-api:nodejs --from=installer /app/node_modules/@fafa/typescript-config ./node_modules/@fafa/typescript-config
 COPY --chown=remix-api:nodejs --from=installer /app/node_modules/@fafa/eslint-config ./node_modules/@fafa/eslint-config
-#COPY --chown=remix-api:nodejs --from=installer /app/backend/prisma ./backend/prisma
+COPY --chown=remix-api:nodejs --from=installer /app/backend/prisma ./backend/prisma
 
 COPY --chown=remix-api:nodejs --from=builder /app/backend/start.sh ./backend/start.sh
 

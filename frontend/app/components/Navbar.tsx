@@ -47,8 +47,13 @@ export const Navbar = ({ logo }: { logo: string }) => {
               Se déconnecter
             </button>
           </form>
-        ) : null}
-      </div>
-    </nav>
-  );
+        ) : (
+          <>
+            <Link className='text-xs' to='/login'>Connexion</Link>
+            <Link className='text-xs' to='/register'>Inscription</Link>
+          </>
+        )}
+            </div>
+        </nav>
+    );
 };
