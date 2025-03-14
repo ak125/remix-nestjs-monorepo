@@ -1,0 +1,53 @@
+model Order {
+  id          Int         @id @default(autoincrement())
+  status      OrderStatus @default(PENDING)
+  customerId  Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderLines  OrderLine[]
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  refundTicket RefundTicket?
+}
+
+model OrderLine {
+  id        Int         @id @default(autoincrement())
+  orderId   Int
+  status    OrderStatus @default(PENDING)
+  pieceId   Int
+  quantity  Int
+  priceHT   Float
+  priceTTC  Float
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  piece     Piece       @relation(fields: [pieceId], references: [id])
+}
+
+model RefundTicket {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @unique
+  amount    Float
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  SHIPPED
+  DELIVERED
+}
+model Order {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  totalAmount       Float
+  isPaid            Boolean @default(false)
+  status           String  @default("PENDING")
+  paymentAuth      String? 
+  paymentTransactionId String?
+  paymentMethod    String?
+  paymentCountry   String?
+  paymentDate      DateTime?
+  parentId         Int? // Pour les commandes supplémentaires
+  createdAt        DateTime @default(now())
+}

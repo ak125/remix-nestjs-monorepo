@@ -1,40 +1,16 @@
-import {
-  Controller,
-  Get,
-  Next,
-  Post,
-  Redirect,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { NextFunction, Response } from 'express';
-import { LocalAuthGuard } from './local-auth.guard';
+import { Controller, Get, Session, UnauthorizedException } from '@nestjs/common';
+import { AuthService } from './auth.service';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
-  @UseGuards(LocalAuthGuard)
-  @Get('/authenticate')
-  @Redirect('/')
-  login() {}
+  constructor(private authService: AuthService) {}
 
-  @Post('auth/logout')
-  async logout(
-    @Req() request: Express.Request,
-    @Res() response: Response,
-    @Next() next: NextFunction,
-  ) {
-    // this will ensure that re-using the old session id
-    // does not have a logged in user
-    request.logOut(function (err) {
-      if (err) {
-        return next(err);
-      }
-      // Ensure the session is destroyed and the user is redirected.
-      request.session.destroy(() => {
-        response.clearCookie('connect.sid'); // The name of the cookie where express/connect stores its session_id
-        response.redirect('/'); // Redirect to website after logout
-      });
-    });
+  @Get('verify') 
+  async verifySession(@Session() session: Record<string, any>) {
+    if (!session) {
+      throw new UnauthorizedException('No session found');
+    }
+
+    return this.authService.verifySession(session);
   }
 }

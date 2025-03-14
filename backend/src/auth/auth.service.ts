@@ -1,124 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { createId } from '@paralleldrive/cuid2';
-import { compare, hash } from 'bcryptjs';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-const PASSWORD_SALT = 10;
+import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private config: ConfigService
+  ) {}
 
-  public readonly checkIfUserExists = async ({
-    email,
-    password,
-    withPassword,
-  }: {
-    email: string;
-    withPassword: boolean;
-    password: string;
-  }) => {
-    console.log('--- Début de checkIfUserExists ---');
-    console.log('Email fourni :', email);
-    console.log('Mot de passe fourni :', password);
+  async verifySession(session: any) {
+    const log = session.im7mylog;
+    const mykey = session.im7mykey;
 
-    // Vérifie si l'utilisateur existe dans la base
-    const existingUser = await this.prisma.user.findUnique({
+    if (!mykey || mykey === crypto.createHash('md5').update('default').digest('hex')) {
+      return this.getAccessResponse('expired');
+    }
+
+    const reseller = await this.prisma.resellerAccess.findFirst({
+      where: { login: log, keylog: mykey },
+    });
+
+    if (!reseller) {
+      return this.getAccessResponse('refused');
+    }
+
+    return reseller.valide === 1 
+      ? this.getAccessResponse('granted', reseller.id)
+      : this.getAccessResponse('suspended');
+  }
+
+  async validateAdmin(params: { 
+    login: string;
+    keylog: string;
+  }) {
+    const { login, keylog } = params;
+
+    const admin = await this.prisma.cONFIG_ADMIN.findFirst({
       where: {
-        email,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        password: true,
-      },
-    });
-
-    console.log('Utilisateur trouvé :', existingUser);
-
-    if (!existingUser) {
-      console.log('Erreur : utilisateur introuvable.');
-      return {
-        message: "L'email est invalide",
-        error: true,
-      };
-    }
-
-    if (withPassword) {
-      console.log('Validation du mot de passe activée.');
-      console.log(
-        'Mot de passe haché de l’utilisateur :',
-        existingUser.password,
-      );
-
-      // Comparaison des mots de passe
-      const isPasswordValid = await compare(
-        password,
-        existingUser.password || '',
-      );
-      console.log(
-        'Résultat de la comparaison du mot de passe :',
-        isPasswordValid,
-      );
-
-      if (!isPasswordValid) {
-        console.log('Erreur : mot de passe invalide.');
-        return {
-          message: 'Le mot de passe est invalide',
-          error: true,
-        };
+        CNFA_LOGIN: login,
+        CNFA_KEYLOG: keylog,
+        CNFA_LEVEL: {
+          gt: 6
+        }
       }
+    });
+
+    if (!admin || !admin.CNFA_ACTIV) {
+      throw new UnauthorizedException('Accès refusé ou compte suspendu');
     }
 
-    console.log('Utilisateur validé avec succès.');
-    return {
-      message: "L'utilisateur existe.",
-      error: false,
+    return admin;
+  }
+
+  private getAccessResponse(status: 'expired' | 'refused' | 'suspended' | 'granted', ssid = 0) {
+    const responses = {
+      expired: {
+        destinationLink: '/access-expired',
+        destinationLinkMsg: 'Expired',
+      },
+      refused: {
+        destinationLink: '/access-refused', 
+        destinationLinkMsg: 'Denied',
+      },
+      suspended: {
+        destinationLink: '/access-suspended',
+        destinationLinkMsg: 'Suspended',
+      },
+      granted: {
+        destinationLink: '/access-permitted',
+        destinationLinkMsg: 'Granted',
+      }
     };
-  };
 
-  public readonly createUser = async ({
-    email,
-    name,
-    password,
-  }: {
-    email: string;
-    name: string;
-    password: string;
-  }) => {
-    const hashedPassword = await hash(password, PASSWORD_SALT);
-    console.log(
-      'Création de l’utilisateur avec un mot de passe haché :',
-      hashedPassword,
-    );
-    return await this.prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        name,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
-  };
-
-  public readonly authenticateUser = async ({ email }: { email: string }) => {
-    console.log('Authentification de l’utilisateur avec email :', email);
-    return await this.prisma.session.create({
-      data: {
-        user: {
-          connect: {
-            email,
-          },
-        },
-        sessionToken: createId(),
-      },
-      select: {
-        sessionToken: true,
-      },
-    });
-  };
+    return {
+      ...responses[status],
+      ssid,
+      accessRequest: status === 'granted',
+      destinationLinkGranted: status === 'granted' ? 1 : 0
+    };
+  }
 }

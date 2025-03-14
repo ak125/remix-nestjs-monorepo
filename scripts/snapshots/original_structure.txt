@@ -1,0 +1,203 @@
+backend
+├── README.md
+├── generate-hash.js
+├── nest-cli.json
+├── package.json
+├── prisma
+│   ├── migrations
+│   │   ├── 20241225222908_init_prisma
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   └── schema.prisma
+├── src
+│   ├── app.controller.ts
+│   ├── app.module.ts
+│   ├── app.service.ts
+│   ├── auth
+│   │   ├── auth.controller.ts
+│   │   ├── auth.module.ts
+│   │   ├── auth.service.ts
+│   │   ├── cookie-serializer.ts
+│   │   ├── exception.filter.ts
+│   │   ├── local-auth.guard.ts
+│   │   ├── local.strategy.ts
+│   │   └── redirected-error.exception.ts
+│   ├── common
+│   │   ├── decorators
+│   │   │   └── roles.decorator.ts
+│   │   ├── enums
+│   │   │   └── roles.enum.ts
+│   │   ├── filters
+│   │   │   └── http-exception.filter.ts
+│   │   ├── guards
+│   │   │   ├── roles.guard.ts
+│   │   │   └── ws-auth.guard.ts
+│   │   ├── interceptors
+│   │   │   └── logging.interceptor.ts
+│   │   └── services
+│   │       └── logger.service.ts
+│   ├── core
+│   │   ├── core.controller.ts
+│   │   ├── core.module.ts
+│   │   └── core.service.ts
+│   ├── mailer
+│   │   ├── mailer.module.ts
+│   │   └── mailer.service.ts
+│   ├── main.ts
+│   ├── messages
+│   │   ├── messages.controller.ts
+│   │   ├── messages.gateway.ts
+│   │   ├── messages.module.ts
+│   │   └── messages.service.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── dto
+│   │   │   │   └── register.dto.ts
+│   │   │   ├── guards
+│   │   │   └── interfaces
+│   │   │       └── user.interface.ts
+│   │   ├── business
+│   │   │   └── business.module.ts
+│   │   ├── cart
+│   │   │   ├── cart.controller.ts
+│   │   │   ├── cart.module.ts
+│   │   │   └── cart.service.ts
+│   │   ├── core
+│   │   │   └── core.module.ts
+│   │   ├── email
+│   │   │   └── services
+│   │   │       └── email.service.ts
+│   │   ├── order-archive
+│   │   │   ├── order-archive.controller.ts
+│   │   │   ├── order-archive.module.ts
+│   │   │   └── order-archive.service.ts
+│   │   ├── orders
+│   │   │   ├── controllers
+│   │   │   │   └── orders.controller.ts
+│   │   │   ├── gateways
+│   │   │   │   └── order.gateway.ts
+│   │   │   ├── modules
+│   │   │   ├── orders.controller.ts
+│   │   │   ├── orders.module.ts
+│   │   │   ├── orders.service.ts
+│   │   │   └── services
+│   │   │       ├── order.service.ts
+│   │   │       └── orders.service.ts
+│   │   ├── redis
+│   │   │   ├── redis.module.ts
+│   │   │   └── redis.service.ts
+│   │   ├── session
+│   │   │   ├── session.controller.ts
+│   │   │   ├── session.module.ts
+│   │   │   └── session.service.ts
+│   │   ├── users
+│   │   │   ├── account.controller.ts
+│   │   │   ├── account.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── change-password.dto.ts
+│   │   │   │   ├── reset-password.dto.ts
+│   │   │   │   ├── update-address.dto.ts
+│   │   │   │   └── update-billing-address.dto.ts
+│   │   │   ├── users.controller.ts
+│   │   │   ├── users.module.ts
+│   │   │   └── users.service.ts
+│   │   └── websocket
+│   │       ├── gateways
+│   │       │   └── websocket.gateway.ts
+│   │       └── services
+│   │           └── connection.service.ts
+│   ├── orders
+│   │   ├── invoice.controller.ts
+│   │   ├── orders.controller.ts
+│   │   ├── orders.module.ts
+│   │   └── orders.service.ts
+│   ├── prisma
+│   │   ├── prisma.module.ts
+│   │   ├── prisma.service.ts
+│   │   └── seed.ts
+│   ├── remix
+│   │   ├── remix.controller.ts
+│   │   └── remix.service.ts
+│   ├── scripts
+│   │   └── migrate-orders.ts
+│   └── types
+│       └── session.d.ts
+├── start.sh
+├── tsconfig.build.json
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+frontend
+├── README.md
+├── app
+│   ├── components
+│   │   ├── AccountMenu.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── forms.tsx
+│   │   └── ui
+│   │       ├── button.tsx
+│   │       └── input.tsx
+│   ├── entry.client.tsx
+│   ├── entry.server.tsx
+│   ├── global.css
+│   ├── hooks
+│   │   └── useOrderSocket.ts
+│   ├── lib
+│   │   └── utils.ts
+│   ├── root.tsx
+│   ├── routes
+│   │   ├── _assets
+│   │   │   ├── logo-automecanik-dark.png
+│   │   │   └── logo-coup-de-pouce-dark.png
+│   │   ├── _index.tsx
+│   │   ├── _public+
+│   │   │   ├── _layout.tsx
+│   │   │   ├── home.tsx
+│   │   │   ├── login.tsx
+│   │   │   └── register.tsx
+│   │   ├── auth
+│   │   │   └── profile.tsx
+│   │   ├── cart.tsx
+│   │   ├── messages.$msgId.tsx
+│   │   ├── messages.tsx
+│   │   ├── orders.$orderId.tsx
+│   │   └── orders.tsx
+│   ├── server
+│   │   ├── auth.server.ts
+│   │   ├── session.server.ts
+│   │   └── user.server.ts
+│   └── services
+│       └── socket.service.ts
+├── components.json
+├── index.cjs
+├── index.d.cts
+├── package.json
+├── postcss.config.cjs
+├── src
+│   ├── components
+│   │   ├── AccessCheck.tsx
+│   │   ├── LoginForm.tsx
+│   │   └── RegisterForm.tsx
+│   ├── hooks
+│   │   ├── useAuth.ts
+│   │   └── useLogin.ts
+│   ├── pages
+│   │   └── AccessCheck.tsx
+│   ├── services
+│   │   └── api.service.ts
+│   └── utils
+│       └── checkAccess.ts
+├── tailwind.config.cjs
+├── tsconfig.json
+└── vite.config.ts
+packages
+├── eslint-config
+│   ├── base.js
+│   └── package.json
+└── typescript-config
+    ├── base.json
+    └── package.json
+
+62 directories, 136 files

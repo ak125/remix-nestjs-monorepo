@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://MASSDOC_owner:Fv4Eang6HxBb@ep-young-haze-a2gss4oh-pooler.eu-central-1.aws.neon.tech/MASSDOC?sslmode=require"
+  url      = "postgresql://MASSDOC_owner:npg_cLzOm46MjDEX@ep-young-haze-a2gss4oh-pooler.eu-central-1.aws.neon.tech/MASSDOC?sslmode=require"
 }
 
 model User {
@@ -24,4 +24,2202 @@ model Session {
   userAgent    String?
   sessionToken String  @unique
   user         User    @relation(fields: [userId], references: [id])
+}
+
+model Menu {
+  id    Int    @id @default(autoincrement())
+  label String
+  href  String
+  icon  String
+  type  String // "account" ou "footer"
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  subject    String
+  content    String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation(fields: [senderId], references: [id])
+  receiver User @relation(fields: [receiverId], references: [id])
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  resetToken String?  @unique
+  resetTokenExpiry DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model Invoice {
+  id           String  @id @default(uuid())
+  orderId      String  @map("id_com")   // Identifiant de commande
+  invoiceNumber String  @map("id_fact") // Numéro de facture
+  dateIssued   DateTime @map("date_pay")
+  totalAmount  Float   @map("montant_tt")
+  shippingFees Float   @map("frais_port")
+  clientId     String  @map("id_clt")
+  clientName   String  @map("nom_f")
+  clientEmail  String  @map("mail_f")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  Order Order @relation(fields: [orderId], references: [id])  // Relation avec une commande
+}
+
+model Invoice {
+  id          String  @id @default(uuid())
+  orderId     String  @unique
+  totalAmount Float
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String
+  order       Order @relation(fields: [orderId], references: [id])
+}
+
+model Order {
+  id       String  @id @default(uuid())
+  items    Item[]
+  invoice  Invoice?
+}
+
+model Item {
+  id          String @id @default(uuid())
+  productName String
+  quantity    Int
+  price       Float
+  order       Order @relation(fields: [orderId], references: [id])
+  orderId     String
+}
+
+model Customer {
+  id      String @id @default(uuid())
+  name    String
+  email   String
+  address String
+  invoices Invoice[]
+}
+
+
+model InvoiceLine {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  nom_gamme   String
+  nom_equip   String
+  prix_UTTC   Float
+  quantite    Int
+  prix_TTTC   Float
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model OrderArchive {
+  id          Int      @id @default(autoincrement())
+  customerId  Int
+  totalAmount Decimal
+  status      String
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id])
+}
+
+model WebSocketConnection {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  socketId  String  @unique
+  createdAt DateTime @default(now())
+}
+model OrderEquivalence {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  oldOrderLineId Int
+  newOrderLineId Int
+  status     String  @default("pending")
+  createdAt  DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id])
+}
+model Cart {
+  id           String   @id @default(uuid())
+  userId       String
+  items        Json
+  totalAmount  Float
+  totalConsigne Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Configuration pour PostgreSQL (cible)
+datasource postgresql {
+  provider = "postgresql"
+  url      = "postgresql://MASSDOC_owner:npg_cLzOm46MjDEX@ep-young-haze-a2gss4oh-pooler.eu-central-1.aws.neon.tech/MASSDOC?sslmode=require"
+
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sessions  Session[]
+}
+
+model Session {
+  id           String  @id @default(cuid())
+  userId       String
+  ipAddress    String?
+  userAgent    String?
+  sessionToken String  @unique
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AM_2022_SUPPLIERS {
+  SUP_ID      Int     @id @db.SmallInt
+  SUP_ID_STEQ Int?
+  SUP_PM_ID   Int?
+  SUP_NR      Int?    @db.MediumInt
+  SUP_BRAND   String? @db.VarChar(30)
+  SUP_DISPLAY Boolean @default(false)
+  SUP_SORT    Boolean
+  HAS_IMG     Boolean
+  SUP_FILE    String  @db.VarChar(10)
+
+  @@index([SUP_FILE], map: "SUP_FILE")
+  @@index([SUP_ID], map: "SUP_ID")
+  @@index([SUP_PM_ID], map: "SUP_PM_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_MARQUE {
+  MARQUE_ID              Int                 @id @db.UnsignedSmallInt
+  MARQUE_ALIAS           String              @db.VarChar(20)
+  MARQUE_NAME            String              @db.VarChar(20)
+  MARQUE_NAME_URL        String              @db.VarChar(20)
+  MARQUE_NAME_META       String?             @db.VarChar(20)
+  MARQUE_NAME_META_TITLE String?             @db.VarChar(20)
+  MARQUE_LOGO            String?             @db.VarChar(20)
+  MARQUE_WALL            String?             @db.VarChar(20)
+  MARQUE_RELFOLLOW       Boolean             @default(false)
+  MARQUE_SITEMAP         Boolean             @default(false)
+  MARQUE_DISPLAY         Boolean             @default(false)
+  MARQUE_SORT            Int                 @db.SmallInt
+  MARQUE_TOP             Int                 @default(0) @db.TinyInt
+  AUTO_MODELE            AUTO_MODELE[]
+  AUTO_MODELE_GROUP      AUTO_MODELE_GROUP[]
+  AUTO_TYPE              AUTO_TYPE[]
+
+  @@index([MARQUE_ALIAS], map: "MARQUE_ALIAS")
+  @@index([MARQUE_DISPLAY], map: "MARQUE_DISPLAY")
+  @@index([MARQUE_ID], map: "MARQUE_ID")
+  @@index([MARQUE_RELFOLLOW], map: "MARQUE_RELFOLLOW")
+  @@index([MARQUE_SITEMAP], map: "MARQUE_SITEMAP")
+  @@index([MARQUE_SORT], map: "MARQUE_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_MODELE {
+  MODELE_ID         Int               @id @db.UnsignedMediumInt
+  MODELE_PARENT     Int?              @db.UnsignedMediumInt
+  MODELE_MARQUE_ID  Int               @db.UnsignedSmallInt
+  MODELE_MDG_ID     Int               @db.UnsignedSmallInt
+  MODELE_ALIAS      String            @db.VarChar(40)
+  MODELE_NAME       String            @db.VarChar(40)
+  MODELE_NAME_URL   String            @db.VarChar(40)
+  MODELE_NAME_META  String?           @db.VarChar(40)
+  MODELE_FUL_NAME   String?           @db.VarChar(255)
+  MODELE_MONTH_FROM Int               @default(1) @db.TinyInt
+  MODELE_YEAR_FROM  Int?              @db.SmallInt
+  MODELE_MONTH_TO   Int?              @db.TinyInt
+  MODELE_YEAR_TO    Int?              @db.SmallInt
+  MODELE_BODY       String?           @db.VarChar(25)
+  MODELE_PIC        String?           @db.VarChar(40)
+  MODELE_RELFOLLOW  Boolean           @default(false)
+  MODELE_SITEMAP    Boolean           @default(false)
+  MODELE_DISPLAY    Boolean           @default(false)
+  MODELE_DISPLAY_V1 Boolean?
+  MODELE_SORT       Int               @db.SmallInt
+  MODELE_IS_NEW     Boolean           @default(false)
+  AUTO_MARQUE       AUTO_MARQUE       @relation(fields: [MODELE_MARQUE_ID], references: [MARQUE_ID], onUpdate: Restrict, map: "FK_MODELE_MARQUE_ID")
+  AUTO_MODELE_GROUP AUTO_MODELE_GROUP @relation(fields: [MODELE_MDG_ID], references: [MDG_ID], onUpdate: Restrict, map: "FK_MODELE_MDG_ID")
+  AUTO_TYPE         AUTO_TYPE[]
+  reviews           Review[]
+  videoUrl          String?
+  arModelUrl        String?
+  specifications    ModelSpecification?
+
+  @@index([MODELE_ALIAS], map: "MODELE_ALIAS")
+  @@index([MODELE_DISPLAY], map: "MODELE_DISPLAY")
+  @@index([MODELE_DISPLAY_V1], map: "MODELE_DISPLAY_V1")
+  @@index([MODELE_ID], map: "MODELE_ID")
+  @@index([MODELE_IS_NEW], map: "MODELE_IS_NEW")
+  @@index([MODELE_MARQUE_ID], map: "MODELE_MARQUE_ID")
+  @@index([MODELE_MDG_ID], map: "MODELE_MDG_ID")
+  @@index([MODELE_PARENT], map: "MODELE_PARENT")
+  @@index([MODELE_RELFOLLOW], map: "MODELE_RELFOLLOW")
+  @@index([MODELE_SITEMAP], map: "MODELE_SITEMAP")
+  @@index([MODELE_SORT], map: "MODELE_SORT")
+  @@index([MODELE_YEAR_FROM], map: "MODELE_YEAR_FROM")
+  @@index([MODELE_YEAR_TO], map: "MODELE_YEAR_TO")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_MODELE_GROUP {
+  MDG_ID        Int           @id @db.UnsignedSmallInt
+  MDG_MARQUE_ID Int           @db.UnsignedSmallInt
+  MDG_NAME      String        @db.VarChar(30)
+  MDG_PIC       String?       @db.VarChar(30)
+  MDG_DISPLAY   Int           @default(0) @db.TinyInt
+  MDG_SORT      Int           @db.SmallInt
+  AUTO_MODELE   AUTO_MODELE[]
+  AUTO_MARQUE   AUTO_MARQUE   @relation(fields: [MDG_MARQUE_ID], references: [MARQUE_ID], onUpdate: Restrict, map: "FK_MDG_MARQUE_ID")
+
+  @@index([MDG_DISPLAY], map: "MDG_DISPLAY")
+  @@index([MDG_ID], map: "MDG_ID")
+  @@index([MDG_MARQUE_ID], map: "MDG_MARQUE_ID")
+  @@index([MDG_SORT], map: "MDG_SORT")
+}
+
+model AUTO_MODELE_ROBOT {
+  MODELE_ID         Int     @id @db.UnsignedMediumInt
+  MODELE_MARQUE_ID  Int     @db.UnsignedSmallInt
+  MODELE_MDG_ID     Int     @db.UnsignedSmallInt
+  MODELE_ALIAS      String  @db.VarChar(40)
+  MODELE_NAME       String  @db.VarChar(40)
+  MODELE_NAME_URL   String  @db.VarChar(40)
+  MODELE_NAME_META  String? @db.VarChar(40)
+  MODELE_MONTH_FROM Int     @default(1) @db.TinyInt
+  MODELE_YEAR_FROM  Int?    @db.SmallInt
+  MODELE_MONTH_TO   Int?    @db.TinyInt
+  MODELE_YEAR_TO    Int?    @db.SmallInt
+  MODELE_BODY       String? @db.VarChar(25)
+  MODELE_PIC        String? @db.VarChar(40)
+  MODELE_RELFOLLOW  Boolean @default(false)
+  MODELE_SITEMAP    Boolean @default(false)
+  MODELE_DISPLAY    Boolean @default(false)
+  MODELE_SORT       Int     @db.SmallInt
+  MODELE_IS_NEW     Boolean @default(false)
+
+  @@index([MODELE_ALIAS], map: "MODELE_ALIAS")
+  @@index([MODELE_DISPLAY], map: "MODELE_DISPLAY")
+  @@index([MODELE_ID], map: "MODELE_ID")
+  @@index([MODELE_IS_NEW], map: "MODELE_IS_NEW")
+  @@index([MODELE_MARQUE_ID], map: "MODELE_MARQUE_ID")
+  @@index([MODELE_MDG_ID], map: "MODELE_MDG_ID")
+  @@index([MODELE_RELFOLLOW], map: "MODELE_RELFOLLOW")
+  @@index([MODELE_SITEMAP], map: "MODELE_SITEMAP")
+  @@index([MODELE_SORT], map: "MODELE_SORT")
+  @@index([MODELE_YEAR_FROM], map: "MODELE_YEAR_FROM")
+  @@index([MODELE_YEAR_TO], map: "MODELE_YEAR_TO")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_TYPE {
+  TYPE_ID                  Int                        @id @db.UnsignedInt
+  TYPE_TMF_ID              Int                        @db.UnsignedTinyInt
+  TYPE_ALIAS               String?                    @db.VarChar(60)
+  TYPE_MODELE_ID           Int                        @db.UnsignedMediumInt
+  TYPE_MARQUE_ID           Int                        @db.UnsignedSmallInt
+  TYPE_NAME                String?                    @db.VarChar(60)
+  TYPE_NAME_URL            String?                    @db.VarChar(60)
+  TYPE_NAME_META           String?                    @db.VarChar(60)
+  TYPE_ENGINE              String?                    @db.VarChar(15)
+  TYPE_FUEL                String?                    @db.VarChar(30)
+  TYPE_POWER_PS            Int?                       @db.SmallInt
+  TYPE_POWER_KW            Int?                       @db.SmallInt
+  TYPE_LITER               Int?                       @db.SmallInt
+  TYPE_MONTH_FROM          Int                        @default(1) @db.TinyInt
+  TYPE_YEAR_FROM           Int?                       @db.UnsignedSmallInt
+  TYPE_MONTH_TO            Int?                       @db.TinyInt
+  TYPE_YEAR_TO             Int?                       @db.UnsignedSmallInt
+  TYPE_BODY                String?                    @db.Char(35)
+  TYPE_RELFOLLOW           Boolean                    @default(false)
+  TYPE_DISPLAY             Boolean                    @default(false)
+  TYPE_SORT                Int                        @db.SmallInt
+  AUTO_MARQUE              AUTO_MARQUE                @relation(fields: [TYPE_MARQUE_ID], references: [MARQUE_ID], onUpdate: Restrict, map: "FK_TYPE_MARQUE_ID")
+  AUTO_MODELE              AUTO_MODELE                @relation(fields: [TYPE_MODELE_ID], references: [MODELE_ID], onUpdate: Restrict, map: "FK_TYPE_MODELE_ID")
+  AUTO_TYPE_MOTOR_FUEL     AUTO_TYPE_MOTOR_FUEL       @relation(fields: [TYPE_TMF_ID], references: [TMF_ID], onUpdate: Restrict, map: "FK_TYPE_TMF_ID")
+  AUTO_TYPE_MOTOR_CODE     AUTO_TYPE_MOTOR_CODE[]
+  PIECES_RELATION_CRITERIA PIECES_RELATION_CRITERIA[]
+  PIECES_RELATION_TYPE     PIECES_RELATION_TYPE[]
+
+  @@index([TYPE_ALIAS], map: "TYPE_ALIAS")
+  @@index([TYPE_DISPLAY], map: "TYPE_DISPLAY")
+  @@index([TYPE_ID], map: "TYPE_ID")
+  @@index([TYPE_MARQUE_ID], map: "TYPE_MARQUE_ID")
+  @@index([TYPE_MODELE_ID], map: "TYPE_MODELE_ID")
+  @@index([TYPE_RELFOLLOW], map: "TYPE_RELFOLLOW")
+  @@index([TYPE_SORT], map: "TYPE_SORT")
+  @@index([TYPE_TMF_ID], map: "TYPE_TMF_ID")
+  @@index([TYPE_YEAR_FROM], map: "TYPE_YEAR_FROM")
+  @@index([TYPE_YEAR_TO], map: "TYPE_YEAR_TO")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_TYPE_MOTOR_CODE {
+  TMC_TYPE_ID Int       @db.UnsignedInt
+  TMC_CODE    String    @db.VarChar(25)
+  AUTO_TYPE   AUTO_TYPE @relation(fields: [TMC_TYPE_ID], references: [TYPE_ID], onUpdate: Restrict, map: "FK_TMC_TYPE_ID")
+
+  @@id([TMC_TYPE_ID, TMC_CODE])
+  @@index([TMC_CODE], map: "TMC_CODE")
+  @@index([TMC_TYPE_ID], map: "TMC_TYPE_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_TYPE_MOTOR_FUEL {
+  TMF_ID      Int         @id @db.UnsignedTinyInt
+  TMF_MOTOR   String      @db.VarChar(40)
+  TMF_ENGINE  String      @db.VarChar(15)
+  TMF_FUEL    String      @db.VarChar(30)
+  TMF_SORT    Int         @db.TinyInt
+  TMF_DISPLAY Boolean     @default(false)
+  AUTO_TYPE   AUTO_TYPE[]
+
+  @@index([TMF_DISPLAY], map: "TMF_DISPLAY")
+  @@index([TMF_ID], map: "TMF_ID")
+  @@index([TMF_SORT], map: "TMF_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AUTO_TYPE_NUMBER_CODE {
+  TNC_TYPE_ID Int     @db.UnsignedInt
+  TNC_CNIT    String  @db.VarChar(20)
+  TNC_CODE    String? @db.Char(2)
+
+  @@id([TNC_TYPE_ID, TNC_CNIT])
+  @@index([TNC_CNIT], map: "TNC_CNIT")
+  @@index([TNC_CODE], map: "TNC_CODE")
+  @@index([TNC_TYPE_ID], map: "TNC_TYPE_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model CARS_ENGINE {
+  ENG_ID     Int    @id @default(0) @db.UnsignedSmallInt
+  ENG_MFA_ID Int    @default(0) @db.UnsignedSmallInt
+  ENG_CODE   String @default("") @db.VarChar(30)
+
+  @@index([ENG_ID], map: "ENG_ID")
+  @@index([ENG_MFA_ID], map: "ENG_MFA_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model CATALOG_FAMILY {
+  MF_ID                                                   Int             @id @db.UnsignedTinyInt
+  MF_NAME                                                 String          @db.VarChar(35)
+  MF_NAME_META                                            String?         @db.VarChar(35)
+  MF_NAME_SYSTEM                                          String?         @db.VarChar(35)
+  MF_DESCRIPTION                                          String?         @db.MediumText
+  MF_PIC                                                  String?         @db.VarChar(35)
+  MF_DISPLAY                                              Boolean         @default(false)
+  MF_SORT                                                 Int             @db.TinyInt
+  CATALOG_GAMME_CATALOG_GAMME_MC_MF_IDToCATALOG_FAMILY    CATALOG_GAMME[] @relation("CATALOG_GAMME_MC_MF_IDToCATALOG_FAMILY")
+  CATALOG_GAMME_CATALOG_GAMME_MC_MF_PRIMEToCATALOG_FAMILY CATALOG_GAMME[] @relation("CATALOG_GAMME_MC_MF_PRIMEToCATALOG_FAMILY")
+
+  @@index([MF_DISPLAY], map: "MF_DISPLAY")
+  @@index([MF_ID], map: "MF_ID")
+  @@index([MF_SORT], map: "MF_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model CATALOG_GAMME {
+  MC_ID                                                    Int            @id @db.UnsignedSmallInt
+  MC_MF_ID                                                 Int            @db.UnsignedTinyInt
+  MC_MF_PRIME                                              Int            @db.UnsignedTinyInt
+  MC_PG_ID                                                 Int            @db.UnsignedSmallInt
+  MC_SORT                                                  Int            @db.UnsignedSmallInt
+  CATALOG_FAMILY_CATALOG_GAMME_MC_MF_IDToCATALOG_FAMILY    CATALOG_FAMILY @relation("CATALOG_GAMME_MC_MF_IDToCATALOG_FAMILY", fields: [MC_MF_ID], references: [MF_ID], onUpdate: Restrict, map: "FK_MC_MF_ID")
+  CATALOG_FAMILY_CATALOG_GAMME_MC_MF_PRIMEToCATALOG_FAMILY CATALOG_FAMILY @relation("CATALOG_GAMME_MC_MF_PRIMEToCATALOG_FAMILY", fields: [MC_MF_PRIME], references: [MF_ID], onUpdate: Restrict, map: "FK_MC_MF_PRIME")
+  PIECES_GAMME                                             PIECES_GAMME   @relation(fields: [MC_PG_ID], references: [PG_ID], onUpdate: Restrict, map: "FK_MC_PG_ID")
+
+  @@index([MC_MF_ID], map: "MC_MF_ID")
+  @@index([MC_MF_PRIME], map: "MC_MF_PRIME")
+  @@index([MC_PG_ID], map: "MC_PG_ID")
+  @@index([MC_SORT], map: "MC_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES {
+  PIECE_ID                                            Int                        @db.UnsignedInt
+  PIECE_REF                                           String                     @db.VarChar(150)
+  PIECE_REF_CLEAN                                     String                     @db.VarChar(150)
+  PIECE_PM_ID                                         Int                        @db.UnsignedSmallInt
+  PIECE_PG_ID                                         Int                        @db.UnsignedSmallInt
+  PIECE_GA_ID                                         Int                        @db.UnsignedSmallInt
+  PIECE_DES                                           String?                    @db.VarChar(50)
+  PIECE_NAME                                          String?                    @db.VarChar(150)
+  PIECE_NAME_COMP                                     String?                    @db.VarChar(100)
+  PIECE_NAME_SIDE                                     String?                    @db.VarChar(60)
+  PIECE_FIL_ID                                        Int                        @default(1) @db.SmallInt
+  PIECE_FIL_NAME                                      String?                    @db.VarChar(100)
+  PIECE_QTY_SALE                                      Int                        @default(1) @db.TinyInt
+  PIECE_QTY_PACK                                      Int                        @default(1) @db.TinyInt
+  PIECE_WEIGHT_KGM                                    Float                      @default(0.000)
+  PIECE_HAS_OEM                                       Boolean
+  PIECE_HAS_IMG                                       Boolean
+  PIECE_YEAR                                          Int                        @default(2019) @db.UnsignedSmallInt
+  PIECE_DISPLAY                                       Boolean                    @default(false)
+  PIECE_SORT                                          Int                        @default(1) @db.TinyInt
+  PIECE_UPDATE                                        Boolean
+  PIECE_PG_PID                                        Int                        @db.UnsignedSmallInt
+  PIECE_PSF_ID                                        Int                        @default(9999) @db.UnsignedSmallInt
+  PIECES_GAMME                                        PIECES_GAMME               @relation(fields: [PIECE_PG_ID], references: [PG_ID], onUpdate: Restrict, map: "FK_PIECE_PG_ID")
+  PIECES_MARQUE                                       PIECES_MARQUE              @relation(fields: [PIECE_PM_ID], references: [PM_ID], onUpdate: Restrict, map: "FK_PIECE_PM_ID")
+  PIECES_CRITERIA                                     PIECES_CRITERIA[]
+  PIECES_LIST_PIECES_LIST_PLI_PIECE_IDToPIECES        PIECES_LIST[]              @relation("PIECES_LIST_PLI_PIECE_IDToPIECES")
+  PIECES_LIST_PIECES_LIST_PLI_PIECE_COMPONENTToPIECES PIECES_LIST[]              @relation("PIECES_LIST_PLI_PIECE_COMPONENTToPIECES")
+  PIECES_MEDIA_IMG                                    PIECES_MEDIA_IMG[]
+  PIECES_PRICE                                        PIECES_PRICE[]
+  PIECES_REF_EAN                                      PIECES_REF_EAN[]
+  PIECES_RELATION_CRITERIA                            PIECES_RELATION_CRITERIA[]
+  PIECES_RELATION_TYPE                                PIECES_RELATION_TYPE[]
+
+  @@id([PIECE_ID, PIECE_PM_ID, PIECE_PG_ID, PIECE_FIL_ID])
+  @@index([PIECE_DISPLAY], map: "PIECE_DISPLAY")
+  @@index([PIECE_FIL_ID], map: "PIECE_FIL_ID")
+  @@index([PIECE_GA_ID], map: "PIECE_GA_ID")
+  @@index([PIECE_HAS_IMG], map: "PIECE_HAS_IMG")
+  @@index([PIECE_HAS_OEM], map: "PIECE_HAS_OEM")
+  @@index([PIECE_ID], map: "PIECE_ID")
+  @@index([PIECE_NAME_COMP], map: "PIECE_NAME_COMP")
+  @@index([PIECE_NAME_SIDE], map: "PIECE_NAME_SIDE")
+  @@index([PIECE_PG_ID], map: "PIECE_PG_ID")
+  @@index([PIECE_PG_PID], map: "PIECE_PG_PID")
+  @@index([PIECE_PM_ID], map: "PIECE_PM_ID")
+  @@index([PIECE_PSF_ID], map: "PIECE_PSF_ID")
+  @@index([PIECE_QTY_PACK], map: "PIECE_QTY_PACK")
+  @@index([PIECE_QTY_SALE], map: "PIECE_QTY_SALE")
+  @@index([PIECE_REF], map: "PIECE_REF")
+  @@index([PIECE_REF_CLEAN], map: "PIECE_REF_CLEAN")
+  @@index([PIECE_SORT], map: "PIECE_SORT")
+  @@index([PIECE_UPDATE], map: "PIECE_UPDATE")
+  @@index([PIECE_YEAR], map: "PIECE_YEAR")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_CRITERIA {
+  PC_PIECE_ID           Int                   @db.UnsignedInt
+  PC_PG_PID             Int                   @db.UnsignedSmallInt
+  PC_PG_ID              Int                   @db.UnsignedSmallInt
+  PC_GA_ID              Int                   @db.UnsignedSmallInt
+  PC_CRI_ID             Int                   @db.UnsignedSmallInt
+  PC_CRI_VALUE          String                @db.VarChar(100)
+  PC_HAS_TXT            Boolean
+  PC_UPDATE_VALUE       Boolean               @default(false)
+  PC_DISPLAY            Boolean
+  PC_SORT               Int                   @default(1) @db.TinyInt
+  PIECES_CRITERIA_GROUP PIECES_CRITERIA_GROUP @relation(fields: [PC_CRI_ID], references: [CRI_ID], onUpdate: Restrict, map: "FK_PC_CRI_ID")
+  PIECES                PIECES                @relation(fields: [PC_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_PC_PIECE_ID")
+
+  @@id([PC_PIECE_ID, PC_PG_PID, PC_CRI_ID, PC_CRI_VALUE])
+  @@index([PC_CRI_ID], map: "PC_CRI_ID")
+  @@index([PC_DISPLAY], map: "PC_DISPLAY")
+  @@index([PC_HAS_TXT], map: "PC_HAS_TXT")
+  @@index([PC_PG_ID], map: "PC_PG_ID")
+  @@index([PC_PG_PID], map: "PC_PG_PID")
+  @@index([PC_PIECE_ID], map: "PC_PIECE_ID")
+  @@index([PC_SORT], map: "PC_SORT")
+  @@index([PC_UPDATE_VALUE], map: "PC_UPDATE_VALUE")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_CRITERIA_GROUP {
+  CRI_ID                   Int                        @id @db.UnsignedSmallInt
+  CRI_ID_PARENT            Int                        @db.UnsignedSmallInt
+  CRI_ID_SUCCESSOR         Int?                       @db.UnsignedSmallInt
+  CRI_CRITERIA             String?                    @db.VarChar(80)
+  CRI_UNIT                 String?                    @db.VarChar(40)
+  CRI_TYPE_1               Boolean                    @default(false)
+  CRI_TYPE_2               String?                    @db.Char(1)
+  CRI_DISPLAY              Boolean                    @default(false)
+  PIECES_CRITERIA          PIECES_CRITERIA[]
+  PIECES_RELATION_CRITERIA PIECES_RELATION_CRITERIA[]
+
+  @@index([CRI_CRITERIA], map: "CRI_CRITERIA")
+  @@index([CRI_DISPLAY], map: "CRI_DISPLAY")
+  @@index([CRI_ID], map: "CRI_ID")
+  @@index([CRI_ID_PARENT], map: "CRI_ID_PARENT")
+  @@index([CRI_ID_SUCCESSOR], map: "CRI_ID_SUCCESSOR")
+  @@index([CRI_TYPE_2], map: "CRI_KT")
+  @@index([CRI_TYPE_1], map: "CRI_TYPE")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_CRITERIA_LINK {
+  PCL_PG_ID        Int     @db.UnsignedSmallInt
+  PCL_PG_PID       Int     @db.UnsignedSmallInt
+  PCL_CRI_ID       Int     @db.UnsignedSmallInt
+  PCL_CRI_PARENT   Int     @db.UnsignedSmallInt
+  PCL_CRI_TYPE     Boolean
+  PCL_CRI_CRITERIA String? @db.VarChar(100)
+  PCL_CRI_UNIT     String? @db.VarChar(40)
+  PCL_LEVEL        Int     @default(5) @db.TinyInt
+  PCL_IS_FILTER    Boolean @default(false)
+  PCL_HAS_LINK     Boolean @default(false)
+  PCL_DISPLAY      Boolean @default(false)
+  PCL_SORT         Int     @default(10) @db.UnsignedSmallInt
+
+  @@id([PCL_PG_PID, PCL_PG_ID, PCL_CRI_ID])
+  @@index([PCL_CRI_ID], map: "LC_CRI_ID")
+  @@index([PCL_DISPLAY], map: "LC_DISPLAY")
+  @@index([PCL_IS_FILTER], map: "LC_IS_FILTER")
+  @@index([PCL_LEVEL], map: "LC_LEVEL")
+  @@index([PCL_PG_PID], map: "LC_PG_PID")
+  @@index([PCL_CRI_CRITERIA], map: "PCL_CRI_CRITERIA")
+  @@index([PCL_CRI_PARENT], map: "PCL_CRI_PARENT")
+  @@index([PCL_CRI_TYPE], map: "PCL_CRI_TYPE")
+  @@index([PCL_CRI_UNIT], map: "PCL_CRI_UNIT")
+  @@index([PCL_HAS_LINK], map: "PCL_HAS_LINK")
+  @@index([PCL_PG_ID], map: "PCL_PG_ID")
+  @@index([PCL_SORT], map: "PCL_SORT")
+}
+
+model PIECES_DETAILS {
+  PD_PIECE_ID     Int     @id @db.UnsignedInt
+  PD_REF          String  @db.VarChar(150)
+  PD_REF_CLEAN    String? @db.VarChar(150)
+  PD_PM_ID        Int     @db.UnsignedSmallInt
+  PD_PRB_ID       Int     @db.UnsignedSmallInt
+  PD_PST_ID       Int     @default(2) @db.UnsignedTinyInt
+  PD_DES_ENG      String? @db.VarChar(65)
+  PD_WEIGHT_KGM   Decimal @default(0.0000) @db.Decimal(7, 4)
+  PD_IS_ACCESSORY Boolean @default(false)
+  PD_YEAR         Int     @default(2019) @db.SmallInt
+  HAS_OEM         Boolean
+  HAS_IMG         Boolean @default(true)
+  PD_DISPLAY      Int     @default(2) @db.TinyInt
+  PD_PG_ID        Int     @default(0) @db.UnsignedSmallInt
+
+  @@index([HAS_IMG], map: "HAS_IMG")
+  @@index([HAS_OEM], map: "HAS_OEM")
+  @@index([PD_DES_ENG], map: "PD_DES_ENG")
+  @@index([PD_DISPLAY], map: "PD_DISPLAY")
+  @@index([PD_IS_ACCESSORY], map: "PD_IS_ACCESSORY")
+  @@index([PD_PG_ID], map: "PD_PG_ID")
+  @@index([PD_PIECE_ID], map: "PD_PIECE_ID")
+  @@index([PD_PM_ID], map: "PD_PM_ID")
+  @@index([PD_PRB_ID], map: "PD_PRB_ID")
+  @@index([PD_PST_ID], map: "PD_PST_ID")
+  @@index([PD_REF], map: "PD_REF")
+  @@index([PD_REF_CLEAN], map: "PD_REF_CLEAN")
+  @@index([PD_YEAR], map: "PD_YEAR")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_GAMME {
+  PG_ID                                                            Int                    @id @db.UnsignedSmallInt
+  PG_PARENT                                                        Int                    @db.UnsignedSmallInt
+  PG_PPA_ID                                                        Int?                   @db.UnsignedSmallInt
+  PG_ALIAS                                                         String                 @db.VarChar(90)
+  PG_NAME                                                          String?                @db.VarChar(90)
+  PG_NAME_URL                                                      String?                @db.VarChar(90)
+  PG_NAME_META                                                     String?                @db.VarChar(90)
+  PG_PIC                                                           String?                @db.VarChar(90)
+  PG_IMG                                                           String?                @db.VarChar(200)
+  PG_WALL                                                          String?                @db.VarChar(90)
+  PG_RELFOLLOW                                                     Boolean                @default(false)
+  PG_SITEMAP                                                       Boolean                @default(false)
+  PG_CROSS                                                         Boolean                @default(false)
+  PG_LEVEL                                                         Boolean                @default(false)
+  PG_DISPLAY                                                       Boolean                @default(false)
+  PG_TOP                                                           Boolean                @default(false)
+  CATALOG_GAMME                                                    CATALOG_GAMME[]
+  PIECES                                                           PIECES[]
+  PIECES_GAMME_CROSS_PIECES_GAMME_CROSS_PGC_PG_CROSSToPIECES_GAMME PIECES_GAMME_CROSS[]   @relation("PIECES_GAMME_CROSS_PGC_PG_CROSSToPIECES_GAMME")
+  PIECES_GAMME_CROSS_PIECES_GAMME_CROSS_PGC_PG_IDToPIECES_GAMME    PIECES_GAMME_CROSS[]   @relation("PIECES_GAMME_CROSS_PGC_PG_IDToPIECES_GAMME")
+  PIECES_RELATION_TYPE                                             PIECES_RELATION_TYPE[]
+
+  @@index([PG_CROSS], map: "PG_CROSS")
+  @@index([PG_DISPLAY], map: "PG_DISPLAY")
+  @@index([PG_ID], map: "PG_ID")
+  @@index([PG_LEVEL], map: "PG_LEVEL")
+  @@index([PG_PARENT], map: "PG_PARENT")
+  @@index([PG_PPA_ID], map: "PG_PPA_ID")
+  @@index([PG_RELFOLLOW], map: "PG_RELFOLLOW")
+  @@index([PG_SITEMAP], map: "PG_SITEMAP")
+  @@index([PG_TOP], map: "PG_TOP")
+  @@fulltext([PG_ALIAS], map: "PG_ALIAS")
+}
+
+model PiecesGamme {
+  id          Int       @id @default(autoincrement())
+  alias       String
+  name        String
+  description String
+  seoData     SeoGamme? @relation(fields: [seoId], references: [id])
+  seoId       Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_GAMME_CROSS {
+  PGC_ID                                                     Int          @id @default(autoincrement()) @db.UnsignedSmallInt
+  PGC_PG_ID                                                  Int          @db.UnsignedSmallInt
+  PGC_PG_CROSS                                               Int          @db.UnsignedSmallInt
+  PGC_LEVEL                                                  Boolean      @default(true)
+  PGC_DISPLAY                                                Boolean      @default(true)
+  PGC_SORT                                                   Int          @default(1) @db.TinyInt
+  PIECES_GAMME_PIECES_GAMME_CROSS_PGC_PG_CROSSToPIECES_GAMME PIECES_GAMME @relation("PIECES_GAMME_CROSS_PGC_PG_CROSSToPIECES_GAMME", fields: [PGC_PG_CROSS], references: [PG_ID], onUpdate: Restrict, map: "FK_PGC_PG_CROSS")
+  PIECES_GAMME_PIECES_GAMME_CROSS_PGC_PG_IDToPIECES_GAMME    PIECES_GAMME @relation("PIECES_GAMME_CROSS_PGC_PG_IDToPIECES_GAMME", fields: [PGC_PG_ID], references: [PG_ID], onUpdate: Restrict, map: "FK_PGC_PG_ID")
+
+  @@unique([PGC_PG_ID, PGC_PG_CROSS], map: "PGC_UNIQUE")
+  @@index([PGC_DISPLAY], map: "PGC_DISPLAY")
+  @@index([PGC_LEVEL], map: "PGC_LEVEL")
+  @@index([PGC_PG_CROSS], map: "PGC_PG_CROSS")
+  @@index([PGC_PG_ID], map: "PGC_PG_ID")
+  @@index([PGC_SORT], map: "PGC_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_LIST {
+  PLI_PIECE_ID                                   Int    @db.UnsignedInt
+  PLI_QUANTITY                                   Int    @db.SmallInt
+  PLI_PIECE_COMPONENT                            Int    @db.UnsignedInt
+  PLI_GA_ID                                      Int    @db.UnsignedSmallInt
+  PLI_SORT                                       Int    @db.SmallInt
+  PIECES_PIECES_LIST_PLI_PIECE_IDToPIECES        PIECES @relation("PIECES_LIST_PLI_PIECE_IDToPIECES", fields: [PLI_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "PLI_PIECE")
+  PIECES_PIECES_LIST_PLI_PIECE_COMPONENTToPIECES PIECES @relation("PIECES_LIST_PLI_PIECE_COMPONENTToPIECES", fields: [PLI_PIECE_COMPONENT], references: [PIECE_ID], onUpdate: Restrict, map: "PLI_PIECE_COMPONENT")
+
+  @@id([PLI_PIECE_ID, PLI_PIECE_COMPONENT, PLI_SORT])
+  @@index([PLI_GA_ID], map: "PLI_GA_ID")
+  @@index([PLI_PIECE_COMPONENT], map: "PLI_PIECE_COMPONENT")
+  @@index([PLI_SORT], map: "PLI_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_MARQUE {
+  PM_ID                Int                    @id @db.UnsignedSmallInt
+  PM_ALIAS             String                 @db.VarChar(25)
+  PM_NAME              String                 @db.VarChar(25)
+  PM_NAME_URL          String?                @db.VarChar(25)
+  PM_NAME_META         String?                @db.VarChar(25)
+  PM_LOGO              String?                @db.VarChar(30)
+  PM_QUALITY           String?                @db.VarChar(50)
+  PM_NATURE            String?                @db.VarChar(25)
+  PM_PREVIEW           String?                @db.Text
+  PM_RELFOLLOW         Boolean                @default(false)
+  PM_SITEMAP           Boolean                @default(false)
+  PM_TOP               Boolean                @default(false)
+  PM_OES               String?                @db.Char(5)
+  PM_NB_STARS          Boolean                @default(false)
+  PM_DISPLAY           Boolean                @default(false)
+  PM_SORT              Int                    @default(0) @db.SmallInt
+  PIECES               PIECES[]
+  PIECES_MEDIA_IMG     PIECES_MEDIA_IMG[]
+  PIECES_PRICE         PIECES_PRICE[]
+  PIECES_RELATION_TYPE PIECES_RELATION_TYPE[]
+
+  @@index([PM_ALIAS], map: "PM_ALIAS")
+  @@index([PM_DISPLAY], map: "PM_DISPLAY")
+  @@index([PM_ID], map: "PM_ID")
+  @@index([PM_OES], map: "PM_OES")
+  @@index([PM_RELFOLLOW], map: "PM_RELFOLLOW")
+  @@index([PM_SITEMAP], map: "PM_SITEMAP")
+  @@index([PM_SORT], map: "PM_SORT")
+  @@index([PM_TOP], map: "PM_TOP")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_MEDIA_IMG {
+  PMI_PIECE_ID  Int           @db.UnsignedInt
+  PMI_PM_ID     Int           @db.UnsignedSmallInt
+  PMI_FOLDER    String?       @db.VarChar(25)
+  PMI_NAME      String        @db.VarChar(150)
+  PMI_SORT      Int           @db.TinyInt
+  PMI_DISPLAY   Boolean
+  PIECES        PIECES        @relation(fields: [PMI_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_PMI_PIECE_ID")
+  PIECES_MARQUE PIECES_MARQUE @relation(fields: [PMI_PM_ID], references: [PM_ID], onUpdate: Restrict, map: "FK_PMI_PM_ID")
+
+  @@id([PMI_PIECE_ID, PMI_PM_ID, PMI_NAME])
+  @@index([PMI_DISPLAY], map: "PMI_DISPLAY")
+  @@index([PMI_NAME], map: "PMI_NAME")
+  @@index([PMI_PIECE_ID], map: "PMI_PIECE_ID")
+  @@index([PMI_PM_ID], map: "PMI_PM_ID")
+  @@index([PMI_SORT], map: "PMI_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_PRICE {
+  PRI_PIECE_ID       Int           @db.UnsignedInt
+  PRI_PM_ID          Int           @db.UnsignedSmallInt
+  PRI_EAN            BigInt?
+  PRI_REF            String        @db.VarChar(150)
+  PRI_REF_COMP       String?       @db.VarChar(150)
+  PRI_DES            String?       @db.VarChar(255)
+  PRI_DISPO          Boolean       @default(false)
+  PRI_TYPE           Boolean       @default(false)
+  PRI_PUBLIC_HT      Decimal       @db.Decimal(10, 2)
+  PRI_GROS_HT        Decimal       @db.Decimal(10, 2)
+  PRI_CONSIGNE_HT    Decimal       @default(0.00) @db.Decimal(10, 2)
+  PRI_CONSIGNE_TTC   Decimal       @default(0.00) @db.Decimal(10, 2)
+  PRI_REMISE         Decimal       @db.Decimal(10, 2)
+  PRI_FRS            String?       @db.VarChar(15)
+  PRI_REMISE_2       Decimal?      @db.Decimal(10, 2)
+  PRI_FRS_2          String?       @db.VarChar(15)
+  PRI_REMISE_3       Decimal?      @db.Decimal(10, 2)
+  PRI_FRS_3          String?       @db.VarChar(15)
+  PRI_REMISE_4       Decimal?      @db.Decimal(10, 2)
+  PRI_FRS_4          String?       @db.VarChar(15)
+  PRI_ACHAT_HT       Decimal       @db.Decimal(10, 2)
+  PRI_MARGE          Decimal       @db.Decimal(10, 2)
+  PRI_VENTE_HT       Decimal       @db.Decimal(10, 2)
+  PRI_FRAIS_PORT_HT  Decimal       @default(1.00) @db.Decimal(10, 2)
+  PRI_FRAIS_SUPP_HT  Decimal       @default(0.00) @db.Decimal(10, 2)
+  PRI_TVA            Decimal       @default(0.20) @db.Decimal(5, 2)
+  PRI_VENTE_TTC      Decimal       @db.Decimal(10, 2)
+  PRI_VENTE_TN_TTC   Decimal       @db.Decimal(10, 2)
+  PRI_QTE_COND       Int           @default(1) @db.SmallInt
+  PRI_QTE_VENTE      Int           @default(1) @db.SmallInt
+  PRI_DATE_FROM      DateTime?     @default(now()) @db.DateTime(0)
+  PRI_DATE_TO        DateTime?     @db.DateTime(0)
+  PRI_POIDS          Decimal?      @db.Decimal(10, 3)
+  PRI_UDM_POIDS      String?       @db.Char(5)
+  PRI_HAUTEUR        Decimal?      @db.Decimal(10, 2)
+  PRI_LONGUEUR       Decimal?      @db.Decimal(10, 2)
+  PRI_LARGEUR        Decimal?      @db.Decimal(10, 2)
+  PRI_UDM_DIMENTIONS String?       @db.Char(10)
+  PRI_CODE_METIER    String?       @db.VarChar(25)
+  PRI_CODE_REMISE    String?       @db.VarChar(25)
+  PRI_CODE_SFAM_NU   String?       @db.VarChar(25)
+  PRI_CODE_FAM_NU    String?       @db.VarChar(25)
+  PRI_XLS            String?       @db.VarChar(15)
+  PRI_INSERT_TYPE    String?       @db.VarChar(25)
+  PIECES             PIECES        @relation(fields: [PRI_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_PRI_PIECE_ID")
+  PIECES_MARQUE      PIECES_MARQUE @relation(fields: [PRI_PM_ID], references: [PM_ID], onUpdate: Restrict, map: "FK_PRI_PM_ID")
+
+  @@id([PRI_PIECE_ID, PRI_TYPE])
+  @@index([PRI_DATE_FROM], map: "PRI_DATE_FROM")
+  @@index([PRI_DATE_TO], map: "PRI_DATE_TO")
+  @@index([PRI_DISPO], map: "PRI_DISPO")
+  @@index([PRI_PIECE_ID], map: "PRI_PIECE_ID")
+  @@index([PRI_PM_ID], map: "PRI_PM_ID")
+  @@index([PRI_QTE_COND], map: "PRI_QTE_COND")
+  @@index([PRI_QTE_VENTE], map: "PRI_QTE_VENTE")
+  @@index([PRI_REF], map: "PRI_REF")
+  @@index([PRI_REF_COMP], map: "PRI_REF_COMP")
+  @@index([PRI_TYPE], map: "PRI_TYPE")
+  @@index([PRI_VENTE_HT], map: "PRI_VENTE_HT")
+  @@index([PRI_VENTE_TTC], map: "PRI_VENTE_TTC")
+  @@index([PRI_XLS], map: "PRI_XLS")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_REF_BRAND {
+  PRB_ID            Int                 @id @db.UnsignedSmallInt
+  PRB_NAME          String?             @db.Char(25)
+  PRB_IS_SUP        Boolean             @default(false)
+  PRB_IS_PC         Boolean             @default(false)
+  PRB_IS_CV         Boolean             @default(false)
+  PRB_IS_MTB        Boolean             @default(false)
+  PRB_IS_ENG        Boolean             @default(false)
+  PRB_DISPLAY       Boolean             @default(true)
+  PIECES_REF_OEM    PIECES_REF_OEM[]
+  PIECES_REF_SEARCH PIECES_REF_SEARCH[]
+
+  @@index([PRB_DISPLAY], map: "PRB_DISPLAY")
+  @@index([PRB_ID], map: "PRB_ID")
+  @@index([PRB_IS_CV], map: "PRB_IS_CV")
+  @@index([PRB_IS_ENG], map: "PRB_IS_ENG")
+  @@index([PRB_IS_MTB], map: "PRB_IS_MTB")
+  @@index([PRB_IS_PC], map: "PRB_IS_PC")
+  @@index([PRB_IS_SUP], map: "PRB_IS_SUP")
+  @@index([PRB_NAME], map: "PRB_NAME")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_REF_EAN {
+  PRE_PIECE_ID Int    @db.UnsignedInt
+  PRE_CODE_EAN BigInt
+  PIECES       PIECES @relation(fields: [PRE_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_PRE_PIECE_ID")
+
+  @@id([PRE_PIECE_ID, PRE_CODE_EAN])
+  @@index([PRE_CODE_EAN], map: "PRE_CODE_EAN")
+  @@index([PRE_PIECE_ID], map: "PRE_PIECE_ID")
+}
+
+model PIECES_REF_OEM {
+  PRO_PIECE_ID     Int              @db.UnsignedInt
+  PRO_PRB_ID       Int              @db.UnsignedSmallInt
+  PRO_OEM          String           @default("") @db.VarChar(150)
+  PRO_OEM_SERACH   String           @default("") @db.VarChar(150)
+  PRO_YEAR         Int              @db.UnsignedSmallInt
+  PIECES_REF_BRAND PIECES_REF_BRAND @relation(fields: [PRO_PRB_ID], references: [PRB_ID], onUpdate: Restrict, map: "FK_PRO_PRB_ID")
+
+  @@id([PRO_PIECE_ID, PRO_PRB_ID, PRO_OEM_SERACH])
+  @@index([PRO_OEM_SERACH], map: "PRO_OEM_SERACH")
+  @@index([PRO_PIECE_ID], map: "PRO_PIECE_ID")
+  @@index([PRO_PRB_ID], map: "PRO_PRB_ID")
+  @@index([PRO_YEAR], map: "PRO_YEAR")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_REF_SEARCH {
+  PRS_PIECE_ID     Int              @db.UnsignedInt
+  PRS_SEARCH       String           @db.VarChar(150)
+  PRS_KIND         Int              @db.TinyInt
+  PRS_REF          String?          @db.VarChar(150)
+  PRS_PRB_ID       Int              @db.UnsignedSmallInt
+  PRS_YEAR         Int              @db.SmallInt
+  PRS_PIECE_PRIME  Int              @db.UnsignedInt
+  PIECES_REF_BRAND PIECES_REF_BRAND @relation(fields: [PRS_PRB_ID], references: [PRB_ID], onUpdate: Restrict, map: "FK_PRS_PRB_ID")
+
+  @@id([PRS_PIECE_ID, PRS_SEARCH, PRS_KIND])
+  @@index([PRS_KIND], map: "PRS_KIND")
+  @@index([PRS_PIECE_ID], map: "PRS_PIECE_ID")
+  @@index([PRS_PRB_ID], map: "PRS_PRB_ID")
+  @@index([PRS_REF], map: "PRS_REF")
+  @@index([PRS_SEARCH], map: "PRS_SEARCH")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_RELATION_CRITERIA {
+  RCP_TYPE_ID           Int                   @db.UnsignedInt
+  RCP_PIECE_ID          Int                   @db.UnsignedInt
+  RCP_PM_ID             Int                   @db.UnsignedSmallInt
+  RCP_PG_PID            Int                   @db.UnsignedSmallInt
+  RCP_PG_ID             Int                   @db.UnsignedSmallInt
+  RCP_CRI_ID            Int                   @db.UnsignedSmallInt
+  RCP_CRI_VALUE         String                @db.VarChar(100)
+  RCP_HAS_TXT           Boolean
+  RCP_DISPLAY           Boolean
+  RCP_SORT              Int                   @db.SmallInt
+  PIECES_CRITERIA_GROUP PIECES_CRITERIA_GROUP @relation(fields: [RCP_CRI_ID], references: [CRI_ID], onUpdate: Restrict, map: "FK_RCP_CRI_ID")
+  PIECES                PIECES                @relation(fields: [RCP_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_RCP_PIECE_ID")
+  AUTO_TYPE             AUTO_TYPE             @relation(fields: [RCP_TYPE_ID], references: [TYPE_ID], onUpdate: Restrict, map: "FK_RCP_TYPE_ID")
+
+  @@id([RCP_TYPE_ID, RCP_PIECE_ID, RCP_PG_PID, RCP_CRI_ID, RCP_CRI_VALUE, RCP_SORT])
+  @@index([RCP_CRI_ID], map: "RCP_CRI_ID")
+  @@index([RCP_DISPLAY], map: "RCP_DISPLAY")
+  @@index([RCP_HAS_TXT], map: "RCP_HAS_TXT")
+  @@index([RCP_PG_ID], map: "RCP_PG_ID")
+  @@index([RCP_PG_PID], map: "RCP_PG_PID")
+  @@index([RCP_PIECE_ID], map: "RCP_PIECE_ID")
+  @@index([RCP_PM_ID], map: "RCP_PM_ID")
+  @@index([RCP_TYPE_ID], map: "RCP_TYPE_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_RELATION_TYPE {
+  RTP_TYPE_ID   Int           @db.UnsignedInt
+  RTP_PIECE_ID  Int           @db.UnsignedInt
+  RTP_PM_ID     Int           @db.UnsignedSmallInt
+  RTP_PG_ID     Int           @db.UnsignedSmallInt
+  RTP_PG_PID    Int           @db.UnsignedSmallInt
+  RTP_GA_ID     Int           @db.UnsignedSmallInt
+  RTP_PSF_ID    Int           @default(9999) @db.UnsignedSmallInt
+  RTP_INSIDE    String?       @db.VarChar(100)
+  PIECES_GAMME  PIECES_GAMME  @relation(fields: [RTP_PG_ID], references: [PG_ID], onUpdate: Restrict, map: "FK_RTP_PG_ID")
+  PIECES        PIECES        @relation(fields: [RTP_PIECE_ID], references: [PIECE_ID], onUpdate: Restrict, map: "FK_RTP_PIECE_ID")
+  PIECES_MARQUE PIECES_MARQUE @relation(fields: [RTP_PM_ID], references: [PM_ID], onUpdate: Restrict, map: "FK_RTP_PM_ID")
+  AUTO_TYPE     AUTO_TYPE     @relation(fields: [RTP_TYPE_ID], references: [TYPE_ID], onUpdate: Restrict, map: "FK_RTP_TYPE_ID")
+
+  @@id([RTP_TYPE_ID, RTP_PIECE_ID, RTP_PM_ID, RTP_PG_ID])
+  @@index([RTP_GA_ID], map: "RTP_GA_ID")
+  @@index([RTP_PG_ID], map: "RTP_PG_ID")
+  @@index([RTP_PG_PID], map: "RTP_PG_PID")
+  @@index([RTP_PIECE_ID], map: "RTP_PIECE_ID")
+  @@index([RTP_PM_ID], map: "RTP_PM_ID")
+  @@index([RTP_PSF_ID], map: "RTP_PSF_ID")
+  @@index([RTP_TYPE_ID], map: "RTP_TYPE_ID")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_SIDE_FILTRE {
+  PSF_ID      Int     @id @db.UnsignedSmallInt
+  PSF_SIDE    String? @db.VarChar(30)
+  PSF_SORT    Int     @db.TinyInt
+  PSF_DISPLAY Boolean
+
+  @@index([PSF_DISPLAY], map: "PSF_DISPLAY")
+  @@index([PSF_ID], map: "PSF_ID")
+  @@index([PSF_SORT], map: "PSF_SORT")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PIECES_STATUS {
+  PST_ID          Int     @id @unique(map: "PST_ID") @default(autoincrement()) @db.UnsignedTinyInt
+  PST_DESCRIPTION String  @db.VarChar(50)
+  PST_SORT        Int     @db.TinyInt
+  PST_DISPLAY     Boolean @default(true)
+
+  @@index([PST_DISPLAY], map: "PST_DISPLAY")
+  @@index([PST_SORT], map: "PST_SORT")
+}
+
+model BLOG_ADVICE {
+  BA_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BA_TITLE      String   @db.VarChar(255)
+  BA_DESCRIP    String   @db.VarChar(255)
+  BA_KEYWORDS   String   @db.VarChar(255)
+  BA_H1         String   @db.VarChar(255)
+  BA_ALIAS      String   @db.VarChar(255)
+  BA_H2         String   @db.VarChar(255)
+  BA_PREVIEW    String   @db.Text
+  BA_CONTENT    String   @db.Text
+  BA_WALL       String   @db.VarChar(255)
+  BA_CREATE     DateTime @db.DateTime(0)
+  BA_UPDATE     DateTime @db.DateTime(0)
+  BA_PG_ID      Int      @db.UnsignedSmallInt
+  BA_VISIT      Int      @db.UnsignedInt
+  BA_CTA_ANCHOR String?  @db.VarChar(255)
+  BA_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BA_ID], map: "BA_ID")
+  @@index([BA_PG_ID], map: "ZBC_ITEM_PG_ID")
+  @@index([BA_VISIT], map: "ZBC_ITEM_V")
+  @@index([BA_CREATE], map: "datecreated")
+  @@index([BA_UPDATE], map: "dateupdated")
+  @@fulltext([BA_ALIAS], map: "ZBC_ITEM_ALIAS")
+  @@map("__BLOG_ADVICE")
+}
+
+model BLOG_ADVICE_CROSS {
+  BAC_ID          Int @id @default(autoincrement()) @db.UnsignedInt
+  BAC_BA_ID       Int @db.UnsignedInt
+  BAC_BA_ID_CROSS Int @db.UnsignedInt
+
+  @@index([BAC_ID], map: "BAC_ID")
+  @@index([BAC_BA_ID], map: "ZBCC_ITEM_ID")
+  @@index([BAC_BA_ID_CROSS], map: "ZBCC_ITEM_ID_CROSS")
+  @@map("__BLOG_ADVICE_CROSS")
+}
+
+model BLOG_ADVICE_H2 {
+  BA2_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BA2_H2         String   @db.VarChar(255)
+  BA2_CONTENT    String   @db.Text
+  BA2_WALL       String   @db.VarChar(255)
+  BA2_CREATE     DateTime @db.DateTime(0)
+  BA2_UPDATE     DateTime @db.DateTime(0)
+  BA2_BA_ID      Int      @db.UnsignedInt
+  BA2_CTA_ANCHOR String?  @db.VarChar(255)
+  BA2_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BA2_CREATE], map: "BA2_CREATE")
+  @@index([BA2_ID], map: "BA2_ID")
+  @@index([BA2_UPDATE], map: "BA2_UPDATE")
+  @@index([BA2_BA_ID], map: "ITEMH2_ID")
+  @@map("__BLOG_ADVICE_H2")
+}
+
+model BLOG_ADVICE_H3 {
+  BA3_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BA3_H3         String   @db.VarChar(255)
+  BA3_CONTENT    String   @db.Text
+  BA3_WALL       String   @db.VarChar(255)
+  BA3_CREATE     DateTime @db.DateTime(0)
+  BA3_UPDATE     DateTime @db.DateTime(0)
+  BA3_BA2_ID     Int      @db.UnsignedInt
+  BA3_CTA_ANCHOR String?  @db.VarChar(255)
+  BA3_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BA3_CREATE], map: "BA3_CREATE")
+  @@index([BA3_ID], map: "BA3_ID")
+  @@index([BA3_UPDATE], map: "BA3_UPDATE")
+  @@index([BA3_BA2_ID], map: "ITEMH3")
+  @@map("__BLOG_ADVICE_H3")
+}
+
+model BLOG_ADVICE_OLD {
+  BA_ID       Int      @id @default(autoincrement()) @db.UnsignedInt
+  BA_TITLE    String   @db.VarChar(255)
+  BA_DESCRIP  String   @db.VarChar(255)
+  BA_KEYWORDS String   @db.VarChar(255)
+  BA_H1       String   @db.VarChar(255)
+  BA_ALIAS    String   @db.VarChar(255)
+  BA_H2       String   @db.VarChar(255)
+  BA_PREVIEW  String   @db.Text
+  BA_CONTENT  String   @db.Text
+  BA_WALL     String   @db.VarChar(255)
+  BA_CREATE   DateTime @db.DateTime(0)
+  BA_UPDATE   DateTime @db.DateTime(0)
+  BA_PG_ID    Int      @db.UnsignedSmallInt
+  BA_STATUS   Boolean
+  BA_VISIT    Int      @db.UnsignedInt
+
+  @@index([BA_ID], map: "BA_ID")
+  @@index([BA_STATUS], map: "ZBC_ITEM_ETAT")
+  @@index([BA_PG_ID], map: "ZBC_ITEM_PG_ID")
+  @@index([BA_VISIT], map: "ZBC_ITEM_V")
+  @@index([BA_CREATE], map: "datecreated")
+  @@index([BA_UPDATE], map: "dateupdated")
+  @@fulltext([BA_ALIAS], map: "ZBC_ITEM_ALIAS")
+  @@map("__BLOG_ADVICE_OLD")
+}
+
+model BLOG_GUIDE {
+  BG_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BG_TITLE      String   @db.VarChar(255)
+  BG_DESCRIP    String   @db.VarChar(255)
+  BG_KEYWORDS   String   @db.VarChar(255)
+  BG_H1         String   @db.VarChar(255)
+  BG_ALIAS      String   @db.VarChar(255)
+  BG_H2         String   @db.VarChar(255)
+  BG_PREVIEW    String   @db.Text
+  BG_CONTENT    String   @db.Text
+  BG_WALL       String   @db.VarChar(255)
+  BG_CREATE     DateTime @db.DateTime(0)
+  BG_UPDATE     DateTime @db.DateTime(0)
+  BG_VISIT      Int      @db.UnsignedInt
+  BG_CTA_ANCHOR String?  @db.VarChar(255)
+  BG_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BG_ID], map: "BA_ID")
+  @@index([BG_VISIT], map: "ZBC_ITEM_V")
+  @@index([BG_CREATE], map: "datecreated")
+  @@index([BG_UPDATE], map: "dateupdated")
+  @@fulltext([BG_ALIAS], map: "ZBC_ITEM_ALIAS")
+  @@map("__BLOG_GUIDE")
+}
+
+model BLOG_GUIDE_H2 {
+  BG2_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BG2_H2         String   @db.VarChar(255)
+  BG2_CONTENT    String   @db.Text
+  BG2_WALL       String   @db.VarChar(255)
+  BG2_CREATE     DateTime @db.DateTime(0)
+  BG2_UPDATE     DateTime @db.DateTime(0)
+  BG2_BG_ID      Int      @db.UnsignedInt
+  BG2_CTA_ANCHOR String?  @db.VarChar(255)
+  BG2_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BG2_CREATE], map: "BA2_CREATE")
+  @@index([BG2_ID], map: "BA2_ID")
+  @@index([BG2_UPDATE], map: "BA2_UPDATE")
+  @@index([BG2_BG_ID], map: "ITEMH2_ID")
+  @@map("__BLOG_GUIDE_H2")
+}
+
+model BLOG_GUIDE_H3 {
+  BG3_ID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  BG3_H3         String   @db.VarChar(255)
+  BG3_CONTENT    String   @db.Text
+  BG3_WALL       String   @db.VarChar(255)
+  BG3_CREATE     DateTime @db.DateTime(0)
+  BG3_UPDATE     DateTime @db.DateTime(0)
+  BG3_BG2_ID     Int      @db.UnsignedInt
+  BG3_CTA_ANCHOR String?  @db.VarChar(255)
+  BG3_CTA_LINK   String?  @db.VarChar(255)
+
+  @@index([BG3_CREATE], map: "BA3_CREATE")
+  @@index([BG3_ID], map: "BA3_ID")
+  @@index([BG3_UPDATE], map: "BA3_UPDATE")
+  @@index([BG3_BG2_ID], map: "ITEMH3")
+  @@map("__BLOG_GUIDE_H3")
+}
+
+model BLOG_META_TAGS_ARIANE {
+  MTA_ID        Int     @id @default(autoincrement()) @db.UnsignedInt
+  MTA_TITLE     String? @db.VarChar(255)
+  MTA_DESCRIP   String? @db.VarChar(255)
+  MTA_KEYWORDS  String? @db.VarChar(255)
+  MTA_ARIANE    String? @db.VarChar(255)
+  MTA_H1        String? @db.VarChar(255)
+  MTA_CONTENT   String? @db.Text
+  MTA_ALIAS     String? @db.VarChar(255)
+  MTA_RELFOLLOW Boolean @default(false)
+
+  @@index([MTA_ID], map: "MTA_ID")
+  @@index([MTA_RELFOLLOW], map: "MTA_RELFOLLOW")
+  @@fulltext([MTA_ALIAS], map: "MTA_ALIAS")
+  @@map("__BLOG_META_TAGS_ARIANE")
+}
+
+model BLOG_SEO_MARQUE {
+  BSM_ID        Int    @default(autoincrement()) @db.UnsignedSmallInt
+  BSM_TITLE     String @db.VarChar(255)
+  BSM_DESCRIP   String @db.VarChar(255)
+  BSM_KEYWORDS  String @db.VarChar(255)
+  BSM_H1        String @db.VarChar(255)
+  BSM_CONTENT   String @db.Text
+  BSM_MARQUE_ID Int    @db.UnsignedSmallInt
+
+  @@id([BSM_ID, BSM_MARQUE_ID])
+  @@index([BSM_MARQUE_ID], map: "AM_MARQUE_ID")
+  @@map("__BLOG_SEO_MARQUE")
+}
+
+model CROSS_GAMME_CAR {
+  CGC_ID        Int @id @default(autoincrement()) @db.UnsignedInt
+  CGC_PG_ID     Int @db.UnsignedSmallInt
+  CGC_MARQUE_ID Int @db.UnsignedSmallInt
+  CGC_MODELE_ID Int @db.UnsignedMediumInt
+  CGC_TYPE_ID   Int @db.UnsignedInt
+  CGC_LEVEL     Int @db.TinyInt
+
+  @@unique([CGC_PG_ID, CGC_TYPE_ID, CGC_LEVEL], map: "CGC_UNIQUE")
+  @@index([CGC_LEVEL], map: "CGC_LEVEL")
+  @@index([CGC_MARQUE_ID], map: "CGC_MARQUE_ID")
+  @@index([CGC_MODELE_ID], map: "CGC_MODELE_ID")
+  @@index([CGC_PG_ID], map: "CGC_PG_ID")
+  @@index([CGC_TYPE_ID], map: "CGC_TYPE_ID")
+  @@map("__CROSS_GAMME_CAR")
+}
+
+model CROSS_GAMME_CAR_NEW {
+  CGC_ID        Int @id @default(autoincrement()) @db.UnsignedInt
+  CGC_PG_ID     Int @db.UnsignedSmallInt
+  CGC_MARQUE_ID Int @db.UnsignedSmallInt
+  CGC_MDG_ID    Int @db.UnsignedSmallInt
+  CGC_MODELE_ID Int @db.UnsignedMediumInt
+  CGC_TYPE_ID   Int @db.UnsignedInt
+  CGC_LEVEL     Int @db.TinyInt
+
+  @@unique([CGC_PG_ID, CGC_TYPE_ID, CGC_LEVEL], map: "CGC_UNIQUE")
+  @@index([CGC_LEVEL], map: "CGC_LEVEL")
+  @@index([CGC_MARQUE_ID], map: "CGC_MARQUE_ID")
+  @@index([CGC_MDG_ID], map: "CGC_MDG_ID")
+  @@index([CGC_MODELE_ID], map: "CGC_MODELE_ID")
+  @@index([CGC_PG_ID], map: "CGC_PG_ID")
+  @@index([CGC_TYPE_ID], map: "CGC_TYPE_ID")
+  @@map("__CROSS_GAMME_CAR_NEW")
+}
+
+model CROSS_GAMME_CAR_NEW2 {
+  CGC_ID        Int @id @default(autoincrement()) @db.UnsignedInt
+  CGC_PG_ID     Int @db.UnsignedSmallInt
+  CGC_MARQUE_ID Int @db.UnsignedSmallInt
+  CGC_MDG_ID    Int @db.UnsignedSmallInt
+  CGC_MODELE_ID Int @db.UnsignedMediumInt
+  CGC_TYPE_ID   Int @db.UnsignedInt
+  CGC_LEVEL     Int @db.TinyInt
+
+  @@unique([CGC_PG_ID, CGC_TYPE_ID, CGC_LEVEL], map: "CGC_UNIQUE")
+  @@index([CGC_LEVEL], map: "CGC_LEVEL")
+  @@index([CGC_MARQUE_ID], map: "CGC_MARQUE_ID")
+  @@index([CGC_MDG_ID], map: "CGC_MDG_ID")
+  @@index([CGC_MODELE_ID], map: "CGC_MODELE_ID")
+  @@index([CGC_PG_ID], map: "CGC_PG_ID")
+  @@index([CGC_TYPE_ID], map: "CGC_TYPE_ID")
+  @@map("__CROSS_GAMME_CAR_NEW2")
+}
+
+model SEO_EQUIP_GAMME {
+  SEG_ID      Int     @default(autoincrement()) @db.UnsignedSmallInt
+  SEG_CONTENT String? @db.Text
+  SEG_PM_ID   Int     @db.UnsignedSmallInt
+  SEG_PG_ID   Int     @db.UnsignedSmallInt
+
+  @@id([SEG_ID, SEG_PM_ID, SEG_PG_ID])
+  @@unique([SEG_PM_ID, SEG_PG_ID], map: "SEG_UNIQUE")
+  @@index([SEG_PG_ID], map: "SEG_PG_ID")
+  @@index([SEG_PM_ID], map: "SEG_PM_ID")
+  @@map("__SEO_EQUIP_GAMME")
+}
+
+model SEO_FAMILY_GAMME_CAR_SWITCH {
+  SFGCS_ID      Int    @default(autoincrement()) @db.UnsignedInt
+  SFGCS_CONTENT String @db.VarChar(255)
+  SFGCS_ALIAS   Int    @db.UnsignedSmallInt
+  SFGCS_MF_ID   Int    @db.UnsignedTinyInt
+  SFGCS_PG_ID   Int    @db.UnsignedSmallInt
+
+  @@id([SFGCS_ID, SFGCS_MF_ID, SFGCS_PG_ID])
+  @@index([SFGCS_ALIAS], map: "SFGCS_ALIAS")
+  @@index([SFGCS_MF_ID], map: "SFGCS_MF_ID")
+  @@index([SFGCS_PG_ID], map: "SFGCS_PG_ID")
+  @@map("__SEO_FAMILY_GAMME_CAR_SWITCH")
+}
+
+model SEO_GAMME {
+  SG_ID       Int     @default(autoincrement()) @db.UnsignedSmallInt
+  SG_TITLE    String? @db.VarChar(255)
+  SG_DESCRIP  String? @db.Text
+  SG_KEYWORDS String? @db.VarChar(255)
+  SG_H1       String? @db.VarChar(255)
+  SG_CONTENT  String? @db.Text
+  SG_PG_ID    Int     @db.UnsignedSmallInt
+
+  @@id([SG_ID, SG_PG_ID])
+  @@index([SG_PG_ID], map: "SG_PG_ID")
+  @@map("__SEO_GAMME")
+}
+
+model SEO_GAMME_CAR {
+  SGC_ID      Int    @db.UnsignedSmallInt
+  SGC_TITLE   String @db.VarChar(255)
+  SGC_DESCRIP String @db.VarChar(255)
+  SGC_H1      String @db.VarChar(255)
+  SGC_PREVIEW String @db.Text
+  SGC_CONTENT String @db.Text
+  SGC_PG_ID   Int    @db.UnsignedSmallInt
+
+  @@id([SGC_ID, SGC_PG_ID])
+  @@index([SGC_PG_ID], map: "SGC_PG_ID")
+  @@map("__SEO_GAMME_CAR")
+}
+
+model SEO_GAMME_CAR_SWITCH {
+  SGCS_ID      Int    @default(autoincrement()) @db.UnsignedInt
+  SGCS_CONTENT String @db.VarChar(255)
+  SGCS_ALIAS   Int    @db.UnsignedSmallInt
+  SGCS_PG_ID   Int    @db.UnsignedSmallInt
+
+  @@id([SGCS_ID, SGCS_PG_ID])
+  @@index([SGCS_ALIAS], map: "SGCS_ALIAS")
+  @@index([SGCS_PG_ID], map: "SGCS_PG_ID")
+  @@map("__SEO_GAMME_CAR_SWITCH")
+}
+
+model SEO_GAMME_CONSEIL {
+  SGC_ID      Int     @default(autoincrement()) @db.UnsignedSmallInt
+  SGC_TITLE   String? @db.VarChar(255)
+  SGC_CONTENT String? @db.Text
+  SGC_PG_ID   Int     @db.UnsignedSmallInt
+
+  @@id([SGC_ID, SGC_PG_ID])
+  @@index([SGC_PG_ID], map: "SGC_PG_ID")
+  @@map("__SEO_GAMME_CONSEIL")
+}
+
+model SEO_GAMME_INFO {
+  SGI_ID      Int     @default(autoincrement()) @db.UnsignedSmallInt
+  SGI_CONTENT String? @db.Text
+  SGI_PG_ID   Int     @db.UnsignedSmallInt
+
+  @@id([SGI_ID, SGI_PG_ID])
+  @@index([SGI_PG_ID], map: "SGI_PG_ID")
+  @@map("__SEO_GAMME_INFO")
+}
+
+model SEO_ITEM_SWITCH {
+  SIS_ID      Int    @default(autoincrement()) @db.UnsignedInt
+  SIS_CONTENT String @db.VarChar(255)
+  SIS_ALIAS   Int    @db.UnsignedSmallInt
+  SIS_PG_ID   Int    @db.UnsignedSmallInt
+
+  @@id([SIS_ID, SIS_PG_ID])
+  @@index([SIS_ALIAS], map: "SIS_ALIAS")
+  @@index([SIS_PG_ID], map: "SIS_PG_ID")
+  @@map("__SEO_ITEM_SWITCH")
+}
+
+model SEO_MARQUE {
+  SM_ID        Int    @default(autoincrement()) @db.UnsignedSmallInt
+  SM_TITLE     String @db.VarChar(255)
+  SM_DESCRIP   String @db.VarChar(255)
+  SM_KEYWORDS  String @db.VarChar(255)
+  SM_H1        String @db.VarChar(255)
+  SM_CONTENT   String @db.Text
+  SM_MARQUE_ID Int    @db.UnsignedSmallInt
+
+  @@id([SM_ID, SM_MARQUE_ID])
+  @@index([SM_MARQUE_ID], map: "AM_MARQUE_ID")
+  @@map("__SEO_MARQUE")
+}
+
+model SEO_TYPE_SWITCH {
+  STS_ID      Int    @id @default(autoincrement()) @db.UnsignedSmallInt
+  STS_CONTENT String @db.VarChar(255)
+  STS_ALIAS   Int    @db.UnsignedSmallInt
+
+  @@index([STS_ALIAS], map: "STS_ALIAS")
+  @@index([STS_ID], map: "STS_ID")
+  @@map("__SEO_TYPE_SWITCH")
+}
+
+model SITEMAP_BLOG {
+  MAP_ID    Int      @id @default(autoincrement())
+  MAP_ALIAS String   @db.VarChar(255)
+  MAP_DATE  DateTime @db.DateTime(0)
+
+  @@map("__SITEMAP_BLOG")
+}
+
+model SITEMAP_GAMME {
+  MAP_ID       Int    @id @default(autoincrement())
+  MAP_PG_ALIAS String @db.VarChar(255)
+  MAP_PG_ID    Int
+
+  @@map("__SITEMAP_GAMME")
+}
+
+model SITEMAP_MARQUE {
+  MAP_ID           Int    @id @default(autoincrement())
+  MAP_MARQUE_ALIAS String @db.VarChar(255)
+  MAP_MARQUE_ID    Int
+
+  @@map("__SITEMAP_MARQUE")
+}
+
+model SITEMAP_MOTORISATION {
+  MAP_ID           Int    @id @default(autoincrement())
+  MAP_MARQUE_ALIAS String @db.VarChar(255)
+  MAP_MARQUE_ID    Int
+  MAP_MODELE_ALIAS String @db.VarChar(255)
+  MAP_MODELE_ID    Int
+  MAP_TYPE_ALIAS   String @db.VarChar(255)
+  MAP_TYPE_ID      Int
+
+  @@map("__SITEMAP_MOTORISATION")
+}
+
+model SITEMAP_P_LINK {
+  MAP_ID           Int    @id @default(autoincrement())
+  MAP_PG_ALIAS     String @db.VarChar(255)
+  MAP_PG_ID        Int
+  MAP_MARQUE_ALIAS String @db.VarChar(255)
+  MAP_MARQUE_ID    Int
+  MAP_MODELE_ALIAS String @db.VarChar(255)
+  MAP_MODELE_ID    Int
+  MAP_TYPE_ALIAS   String @db.VarChar(255)
+  MAP_TYPE_ID      Int
+  MAP_HAS_ITEM     Int
+
+  @@map("__SITEMAP_P_LINK")
+}
+
+model SITEMAP_P_XML {
+  MAP_ID        Int    @id @default(autoincrement())
+  MAP_PG_ID     Int
+  MAP_MARQUE_ID Int
+  MAP_FILE      String @db.VarChar(255)
+  MAP_HAS_LINK  Int
+
+  @@map("__SITEMAP_P_XML")
+}
+
+model SITEMAP_SEARCH_LINK {
+  MAP_ID           Int    @id @default(autoincrement())
+  MAP_PG_ALIAS     String @db.VarChar(255)
+  MAP_PG_ID        Int
+  MAP_MARQUE_ALIAS String @db.VarChar(255)
+  MAP_MARQUE_ID    Int
+  MAP_MODELE_ALIAS String @db.VarChar(255)
+  MAP_MODELE_ID    Int
+  MAP_TYPE_ALIAS   String @db.VarChar(255)
+  MAP_TYPE_ID      Int
+
+  @@map("__SITEMAP_SEARCH_LINK")
+}
+
+model CONFIG {
+  CNF_ID              Int      @id
+  CNF_NAME            String?  @db.VarChar(30)
+  CNF_LOGO            String   @db.VarChar(255)
+  CNF_DOMAIN          String?  @db.VarChar(50)
+  CNF_SLOGAN          String?  @db.VarChar(255)
+  CNF_MF              String   @db.VarChar(50)
+  CNF_ADDRESS         String?  @db.VarChar(255)
+  CNF_LAT             String   @db.VarChar(255)
+  CNF_LNG             String   @db.VarChar(255)
+  CNF_MAIL            String?  @db.VarChar(70)
+  CNF_PHONE           String?  @db.VarChar(50)
+  CNF_PHONE_CALL      String?  @db.VarChar(50)
+  CNF_GROUP_NAME      String?  @db.VarChar(100)
+  CNF_GROUP_DOMAIN    String   @db.VarChar(100)
+  CNF_TVA             Float    @default(20.00) @db.Float
+  CNF_TIMBER          Float    @default(0.00) @db.Float
+  CNF_SHIPPING        Float    @default(9.90) @db.Float
+  CNF_FISCAL_YEAR     Int      @default(22)
+  CNF_FISCAL_BL_FROM  Int
+  CNF_FISCAL_INV_FROM Int
+  CNF_OWNER_NAME      String?  @db.VarChar(50)
+  CNF_OWNER_DOMAIN    String?  @db.VarChar(100)
+  CNF_HR              Boolean? @default(true)
+
+  @@map("___CONFIG")
+}
+
+model CONFIG_ADMIN {
+  CNFA_ID     Int     @id @default(autoincrement())
+  CNFA_LOGIN  String? @db.VarChar(255)
+  CNFA_PSWD   String? @db.VarChar(255)
+  CNFA_MAIL   String? @db.VarChar(255)
+  CNFA_KEYLOG String  @db.VarChar(255)
+  CNFA_LEVEL  Int?
+  CNFA_JOB    String  @db.VarChar(255)
+  CNFA_NAME   String? @db.VarChar(255)
+  CNFA_FNAME  String? @db.VarChar(255)
+  CNFA_TEL    String  @db.VarChar(255)
+  CNFA_ACTIV  Int?
+
+  @@map("___CONFIG_ADMIN")
+}
+
+model CONFIG_IP {
+  CNFIP_ID    Int    @id @default(autoincrement())
+  CNFIP_NAME  String @default("") @db.VarChar(255)
+  CNFIP_ALIAS String @db.VarChar(255)
+  CNFIP_VALUE String @db.VarChar(255)
+
+  @@map("___CONFIG_IP")
+}
+
+model CONFIG_OLD {
+  CNF_ID           Int      @id @default(autoincrement()) @db.UnsignedSmallInt
+  CNF_NAME         String?  @db.VarChar(30)
+  CNF_DOMAIN       String?  @db.VarChar(30)
+  CNF_ADDRESS      String?  @db.VarChar(255)
+  CNF_MAIL         String?  @db.VarChar(70)
+  CNF_PHONE        String?  @db.VarChar(50)
+  CNF_PHONE_CALL   String?  @db.VarChar(50)
+  CNF_HR           Boolean? @default(false)
+  CNF_GROUP_NAME   String   @db.VarChar(255)
+  CNF_GROUP_DOMAIN String   @db.VarChar(255)
+  CNF_OWNER_NAME   String?  @db.VarChar(50)
+  CNF_OWNER_DOMAIN String?  @db.VarChar(100)
+
+  @@index([CNF_HR], map: "CNF_HR")
+  @@map("___CONFIG_OLD")
+}
+
+model FOOTER_MENU {
+  FM_ID        Int     @id @default(autoincrement()) @db.UnsignedSmallInt
+  FM_TITLE     String  @default("") @db.VarChar(255)
+  FM_ALIAS     String  @default("") @db.VarChar(255)
+  FM_LEVEL     Boolean
+  FM_RELFOLLOW Boolean
+
+  @@index([FM_ALIAS], map: "FM_ALIAS")
+  @@index([FM_ID], map: "FM_ID")
+  @@index([FM_LEVEL], map: "FM_LEVEL")
+  @@index([FM_RELFOLLOW], map: "FM_RELFOLLOW")
+  @@map("___FOOTER_MENU")
+}
+
+model HEADER_MENU {
+  HM_ID        Int     @id @default(autoincrement()) @db.UnsignedSmallInt
+  HM_NAME      String? @db.VarChar(50)
+  HM_ALIAS     String? @db.VarChar(50)
+  HM_LINK      String? @db.VarChar(100)
+  HM_FLOAT     Boolean @default(false)
+  HM_RELFOLLOW Boolean @default(false)
+
+  @@index([HM_ALIAS], map: "HM_ALIAS")
+  @@index([HM_FLOAT], map: "HM_FLOAT")
+  @@index([HM_ID], map: "HM_ID")
+  @@index([HM_RELFOLLOW], map: "HM_RELFOLLOW")
+  @@map("___HEADER_MENU")
+}
+
+model META_TAGS_ARIANE {
+  MTA_ID        Int     @id @default(autoincrement()) @db.UnsignedSmallInt
+  MTA_TITLE     String? @db.VarChar(255)
+  MTA_DESCRIP   String? @db.VarChar(255)
+  MTA_KEYWORDS  String? @db.VarChar(255)
+  MTA_ARIANE    String? @db.VarChar(255)
+  MTA_H1        String? @db.VarChar(255)
+  MTA_CONTENT   String? @db.Text
+  MTA_ALIAS     String? @db.VarChar(255)
+  MTA_RELFOLLOW Boolean @default(false)
+
+  @@index([MTA_ALIAS], map: "MTA_ALIAS")
+  @@index([MTA_ID], map: "MTA_ID")
+  @@index([MTA_RELFOLLOW], map: "MTA_RELFOLLOW")
+  @@map("___META_TAGS_ARIANE")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_CUSTOMER {
+  CST_ID                        Int                             @id @default(autoincrement()) @db.UnsignedInt
+  CST_MAIL                      String                          @db.VarChar(150)
+  CST_PSWD                      String                          @db.VarChar(100)
+  CST_KEYLOG                    String?                         @db.VarChar(100)
+  CST_CIVILITY                  String                          @db.Char(10)
+  CST_NAME                      String                          @db.VarChar(255)
+  CST_FNAME                     String                          @db.VarChar(255)
+  CST_ADDRESS                   String                          @db.VarChar(255)
+  CST_ZIP_CODE                  Int                             @db.UnsignedInt
+  CST_CITY                      String                          @db.VarChar(255)
+  CST_COUNTRY                   String                          @db.VarChar(150)
+  CST_TEL                       String?                         @db.VarChar(20)
+  CST_GSM                       String?                         @db.VarChar(20)
+  CST_IS_CPY                    Boolean                         @default(false)
+  CST_RS                        String?                         @db.VarChar(150)
+  CST_SIRET                     String?                         @db.VarChar(150)
+  CST_IS_PRO                    Int                             @default(0) @db.TinyInt
+  CST_ACTIV                     Boolean                         @default(true)
+  CST_LEVEL                     Int                             @default(0) @db.TinyInt
+  XTR_CUSTOMER_BILLING_ADDRESS  XTR_CUSTOMER_BILLING_ADDRESS[]
+  XTR_CUSTOMER_DELIVERY_ADDRESS XTR_CUSTOMER_DELIVERY_ADDRESS[]
+  XTR_INVOICE                   XTR_INVOICE[]
+  XTR_ORDER                     XTR_ORDER[]
+
+  @@index([CST_ACTIV], map: "CST_ACTIV")
+  @@index([CST_ID], map: "CST_ID")
+  @@index([CST_IS_CPY], map: "CST_IS_PRO")
+  @@index([CST_MAIL], map: "CST_MAIL")
+  @@index([CST_PSWD], map: "CST_PSWD")
+  @@map("___XTR_CUSTOMER")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_CUSTOMER_BILLING_ADDRESS {
+  CBA_ID       Int           @id @default(autoincrement()) @db.UnsignedInt
+  CBA_CST_ID   Int           @db.UnsignedInt
+  CBA_MAIL     String        @db.VarChar(150)
+  CBA_CIVILITY String        @db.Char(10)
+  CBA_NAME     String        @db.VarChar(255)
+  CBA_FNAME    String        @db.VarChar(255)
+  CBA_ADDRESS  String        @db.VarChar(255)
+  CBA_ZIP_CODE Int           @db.UnsignedInt
+  CBA_CITY     String        @db.VarChar(255)
+  CBA_COUNTRY  String        @db.VarChar(150)
+  CBA_TEL      String?       @db.VarChar(20)
+  CBA_GSM      String?       @db.VarChar(20)
+  XTR_CUSTOMER XTR_CUSTOMER  @relation(fields: [CBA_CST_ID], references: [CST_ID], onUpdate: Restrict, map: "FK_CBA_CST_ID")
+  XTR_INVOICE  XTR_INVOICE[]
+  XTR_ORDER    XTR_ORDER[]
+
+  @@index([CBA_CST_ID], map: "CBA_CST_ID")
+  @@index([CBA_ID], map: "CBA_ID")
+  @@map("___XTR_CUSTOMER_BILLING_ADDRESS")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_CUSTOMER_DELIVERY_ADDRESS {
+  CDA_ID       Int           @id @default(autoincrement()) @db.UnsignedInt
+  CDA_CST_ID   Int           @db.UnsignedInt
+  CDA_MAIL     String        @db.VarChar(150)
+  CDA_CIVILITY String        @db.Char(10)
+  CDA_NAME     String        @db.VarChar(255)
+  CDA_FNAME    String        @db.VarChar(255)
+  CDA_ADDRESS  String        @db.VarChar(255)
+  CDA_ZIP_CODE Int           @db.UnsignedInt
+  CDA_CITY     String        @db.VarChar(255)
+  CDA_COUNTRY  String        @db.VarChar(150)
+  CDA_TEL      String?       @db.VarChar(20)
+  CDA_GSM      String?       @db.VarChar(20)
+  XTR_CUSTOMER XTR_CUSTOMER  @relation(fields: [CDA_CST_ID], references: [CST_ID], onUpdate: Restrict, map: "FK_CDA_CST_ID")
+  XTR_INVOICE  XTR_INVOICE[]
+  XTR_ORDER    XTR_ORDER[]
+
+  @@index([CDA_CST_ID], map: "CDA_CST_ID")
+  @@index([CDA_ID], map: "CDA_ID")
+  @@map("___XTR_CUSTOMER_DELIVERY_ADDRESS")
+}
+
+model XTR_DELIVERY_AGENT {
+  DA_ID        Int         @id @default(autoincrement()) @db.UnsignedTinyInt
+  DA_NAME      String      @db.VarChar(255)
+  DA_ICON      String      @db.VarChar(255)
+  DA_PREVIEW   String      @db.VarChar(255)
+  DA_EXTERN    Boolean
+  DA_SQL_TABLE String      @db.VarChar(255)
+  DA_FEE       Float       @db.Float
+  DA_SEUIL     Float       @db.Float
+  DA_FEE_NEW   Float       @db.Float
+  XTR_ORDER    XTR_ORDER[]
+
+  @@index([DA_ID], map: "DA_ID")
+  @@map("___XTR_DELIVERY_AGENT")
+}
+
+model XTR_DELIVERY_APE_CORSE {
+  TPG_ID            Int   @id @default(autoincrement())
+  TPG_MIN           Float @db.Float
+  TPG_MAX           Float @db.Float
+  TPG_FRAIS_PORT_HT Float @db.Float
+  TPG_FRAIS_PORT    Float @db.Float
+
+  @@index([TPG_MAX], map: "TPG_MAX")
+  @@index([TPG_MIN], map: "TPG_MIN")
+  @@map("___XTR_DELIVERY_APE_CORSE")
+}
+
+model XTR_DELIVERY_APE_DOMTOM1 {
+  TPG_ID            Int   @id @default(autoincrement())
+  TPG_MIN           Float @db.Float
+  TPG_MAX           Float @db.Float
+  TPG_FRAIS_PORT_HT Float @db.Float
+  TPG_FRAIS_PORT    Float @db.Float
+
+  @@index([TPG_MAX], map: "TPG_MAX")
+  @@index([TPG_MIN], map: "TPG_MIN")
+  @@map("___XTR_DELIVERY_APE_DOMTOM1")
+}
+
+model XTR_DELIVERY_APE_DOMTOM2 {
+  TPG_ID            Int   @id @default(autoincrement())
+  TPG_MIN           Float @db.Float
+  TPG_MAX           Float @db.Float
+  TPG_FRAIS_PORT_HT Float @db.Float
+  TPG_FRAIS_PORT    Float @db.Float
+
+  @@index([TPG_MAX], map: "TPG_MAX")
+  @@index([TPG_MIN], map: "TPG_MIN")
+  @@map("___XTR_DELIVERY_APE_DOMTOM2")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_DELIVERY_APE_FRANCE {
+  TPG_ID               Int   @id @default(autoincrement())
+  TPG_MIN              Float @db.Float
+  TPG_MAX              Float @db.Float
+  TPG_FRAIS_PORT_HT    Float @db.Float
+  TPG_FRAIS_PORT       Float @db.Float
+  TPG_FRAIS_AJOUTER_50 Float @db.Float
+  TPG_FRAIS_AJOUTER    Float @db.Float
+
+  @@index([TPG_MAX], map: "TPG_MAX")
+  @@index([TPG_MIN], map: "TPG_MIN")
+  @@map("___XTR_DELIVERY_APE_FRANCE")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_INVOICE {
+  INV_ID                        BigInt                        @id @default(autoincrement()) @db.UnsignedBigInt
+  INV_ORD_ID                    BigInt                        @db.UnsignedBigInt
+  INV_CST_ID                    Int                           @db.UnsignedInt
+  INV_CBA_ID                    Int                           @db.UnsignedInt
+  INV_CDA_ID                    Int                           @db.UnsignedInt
+  INV_DATE                      DateTime                      @db.DateTime(0)
+  INV_AMOUNT_HT                 Float                         @db.Float
+  INV_DEPOSIT_HT                Float                         @db.Float
+  INV_SHIPPING_FEE_HT           Float                         @db.Float
+  INV_TOTAL_HT                  Float                         @db.Float
+  INV_TVA                       Int                           @db.SmallInt
+  INV_AMOUNT_TTC                Float                         @db.Float
+  INV_DEPOSIT_TTC               Float                         @db.Float
+  INV_SHIPPING_FEE_TTC          Float                         @db.Float
+  INV_TOTAL_TTC                 Float                         @db.Float
+  INV_DA_ID                     Int                           @db.UnsignedTinyInt
+  INV_INFO                      String?                       @db.VarChar(255)
+  XTR_CUSTOMER_BILLING_ADDRESS  XTR_CUSTOMER_BILLING_ADDRESS  @relation(fields: [INV_CBA_ID], references: [CBA_ID], onUpdate: Restrict, map: "FK_INV_CBA_ID")
+  XTR_CUSTOMER_DELIVERY_ADDRESS XTR_CUSTOMER_DELIVERY_ADDRESS @relation(fields: [INV_CDA_ID], references: [CDA_ID], onUpdate: Restrict, map: "FK_INV_CDA_ID")
+  XTR_CUSTOMER                  XTR_CUSTOMER                  @relation(fields: [INV_CST_ID], references: [CST_ID], onUpdate: Restrict, map: "FK_INV_CST_ID")
+  XTR_ORDER                     XTR_ORDER                     @relation(fields: [INV_ORD_ID], references: [ORD_ID], onUpdate: Restrict, map: "FK_INV_ORD_ID")
+  XTR_INVOICE_LINE              XTR_INVOICE_LINE[]
+
+  @@index([INV_CBA_ID], map: "INV_CBA_ID")
+  @@index([INV_CDA_ID], map: "INV_CDA_ID")
+  @@index([INV_CST_ID], map: "INV_CST_ID")
+  @@index([INV_DATE], map: "INV_DATE")
+  @@index([INV_DA_ID], map: "INV_DELIVERY_MODE")
+  @@index([INV_ID], map: "INV_ID")
+  @@index([INV_ORD_ID], map: "INV_ORD_ID")
+  @@map("___XTR_INVOICE")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_INVOICE_LINE {
+  INVL_ID                      BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  INVL_INV_ID                  BigInt      @db.UnsignedBigInt
+  INVL_PG_ID                   Int         @db.UnsignedSmallInt
+  INVL_PG_NAME                 String      @db.VarChar(200)
+  INVL_PM_ID                   Int         @db.UnsignedSmallInt
+  INVL_PM_NAME                 String      @db.VarChar(200)
+  INVL_ART_REF                 String      @db.VarChar(200)
+  INVL_ART_REF_CLEAN           String      @db.VarChar(200)
+  INVL_ART_PRICE_SELL_UNIT_HT  Float       @db.Float
+  INVL_ART_PRICE_SELL_UNIT_TTC Float       @db.Float
+  INVL_ART_DEPOSIT_UNIT_HT     Float       @db.Float
+  INVL_ART_DEPOSIT_UNIT_TTC    Float       @db.Float
+  INVL_ART_QUANTITY            Int         @default(1) @db.UnsignedSmallInt
+  INVL_ART_PRICE_SELL_HT       Float       @db.Float
+  INVL_ART_PRICE_SELL_TTC      Float       @db.Float
+  INVL_ART_DEPOSIT_HT          Float       @db.Float
+  INVL_ART_DEPOSIT_TTC         Float       @default(0.00) @db.Float
+  XTR_INVOICE                  XTR_INVOICE @relation(fields: [INVL_INV_ID], references: [INV_ID], onUpdate: Restrict, map: "FK_INVL_INV_ID")
+
+  @@index([INVL_ART_QUANTITY], map: "INVL_ART_QUANTITY")
+  @@index([INVL_ART_REF], map: "INVL_ART_REF")
+  @@index([INVL_ART_REF_CLEAN], map: "INVL_ART_REF_CLEAN")
+  @@index([INVL_ID], map: "INVL_ID")
+  @@index([INVL_INV_ID], map: "INVL_INV_ID")
+  @@index([INVL_PG_ID], map: "INVL_PG_ID")
+  @@index([INVL_PM_ID], map: "INVL_PM_ID")
+  @@map("___XTR_INVOICE_LINE")
+}
+
+model XTR_MSG {
+  MSG_ID           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  MSG_CST_ID       Int      @db.UnsignedInt
+  MSG_ORD_ID       Int      @db.UnsignedInt
+  MSG_ORL_ID       Int      @default(0)
+  MSG_ORL_EQUIV_ID Int      @default(0)
+  MSG_CNFA_ID      Int      @db.UnsignedInt
+  MSG_DATE         DateTime @db.DateTime(0)
+  MSG_SUBJECT      String   @db.VarChar(255)
+  MSG_CONTENT      String   @db.Text
+  MSG_PARENT_ID    Int      @default(0)
+  MSG_OPEN         Int      @default(0) @db.TinyInt
+  MSG_CLOSE        Int      @default(0)
+
+  @@index([MSG_ORD_ID], map: "ORD_CBA_ID")
+  @@index([MSG_CNFA_ID], map: "ORD_CDA_ID")
+  @@index([MSG_CST_ID], map: "ORD_CST_ID")
+  @@index([MSG_DATE], map: "ORD_DATE")
+  @@index([MSG_ID], map: "ORD_ID")
+  @@map("___XTR_MSG")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_ORDER {
+  ORD_ID                        BigInt                        @id @default(autoincrement()) @db.UnsignedBigInt
+  ORD_CST_ID                    Int                           @db.UnsignedInt
+  ORD_CBA_ID                    Int                           @db.UnsignedInt
+  ORD_CDA_ID                    Int                           @db.UnsignedInt
+  ORD_DATE                      DateTime                      @db.DateTime(0)
+  ORD_AMOUNT_HT                 Float                         @db.Float
+  ORD_DEPOSIT_HT                Float                         @db.Float
+  ORD_SHIPPING_FEE_HT           Float                         @db.Float
+  ORD_TOTAL_HT                  Float                         @db.Float
+  ORD_TVA                       Int                           @db.SmallInt
+  ORD_AMOUNT_TTC                Float                         @db.Float
+  ORD_DEPOSIT_TTC               Float                         @db.Float
+  ORD_SHIPPING_FEE_TTC          Float                         @db.Float
+  ORD_TOTAL_TTC                 Float                         @db.Float
+  ORD_IS_PAY                    Boolean                       @default(false)
+  ORD_DATE_PAY                  DateTime?                     @db.DateTime(0)
+  ORD_DA_ID                     Int                           @db.UnsignedTinyInt
+  ORD_INFO                      String?                       @db.VarChar(255)
+  ORD_DEPT_ID                   Int
+  ORD_ORDS_ID                   Int                           @default(1) @db.SmallInt
+  ORD_PARENT                    Int                           @default(0)
+  ORD_LINK                      String?                       @db.VarChar(255)
+  ORD_LINK_TYPE                 Int                           @default(0)
+  XTR_INVOICE                   XTR_INVOICE[]
+  XTR_CUSTOMER_BILLING_ADDRESS  XTR_CUSTOMER_BILLING_ADDRESS  @relation(fields: [ORD_CBA_ID], references: [CBA_ID], onUpdate: Restrict, map: "FK_ORD_CBA_ID")
+  XTR_CUSTOMER_DELIVERY_ADDRESS XTR_CUSTOMER_DELIVERY_ADDRESS @relation(fields: [ORD_CDA_ID], references: [CDA_ID], onUpdate: Restrict, map: "FK_ORD_CDA_ID")
+  XTR_CUSTOMER                  XTR_CUSTOMER                  @relation(fields: [ORD_CST_ID], references: [CST_ID], onUpdate: Restrict, map: "FK_ORD_CST_ID")
+  XTR_DELIVERY_AGENT            XTR_DELIVERY_AGENT            @relation(fields: [ORD_DA_ID], references: [DA_ID], onUpdate: Restrict, map: "FK_ORD_DA_ID")
+  XTR_ORDER_LINE                XTR_ORDER_LINE[]
+
+  @@index([ORD_CBA_ID], map: "ORD_CBA_ID")
+  @@index([ORD_CDA_ID], map: "ORD_CDA_ID")
+  @@index([ORD_CST_ID], map: "ORD_CST_ID")
+  @@index([ORD_DATE], map: "ORD_DATE")
+  @@index([ORD_DATE_PAY], map: "ORD_DATE_PAY")
+  @@index([ORD_DA_ID], map: "ORD_DELIVERY_MODE")
+  @@index([ORD_ID], map: "ORD_ID")
+  @@index([ORD_IS_PAY], map: "ORD_IS_PAY")
+  @@map("___XTR_ORDER")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model XTR_ORDER_LINE {
+  ORL_ID                            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  ORL_ORD_ID                        BigInt    @db.UnsignedBigInt
+  ORL_PG_ID                         Int       @db.UnsignedSmallInt
+  ORL_PG_NAME                       String    @db.VarChar(200)
+  ORL_PM_ID                         Int       @db.UnsignedSmallInt
+  ORL_PM_NAME                       String    @db.VarChar(200)
+  ORL_ART_REF                       String    @db.VarChar(200)
+  ORL_ART_REF_CLEAN                 String    @db.VarChar(200)
+  ORL_ART_PRICE_BUY_UNIT_PUBLIC_HT  Float     @db.Float
+  ORL_ART_PRICE_BUY_UNIT_PUBLIC_TTC Float     @db.Float
+  ORL_ART_PRICE_BUY_DISCOUNT        Float     @db.Float
+  ORL_ART_PRICE_BUY_UNIT_HT         Float     @db.Float
+  ORL_ART_PRICE_BUY_UNIT_TTC        Float     @db.Float
+  ORL_ART_PRICE_SELL_MARGIN         Float     @db.Float
+  ORL_ART_PRICE_SELL_UNIT_HT        Float     @db.Float
+  ORL_ART_PRICE_SELL_UNIT_TTC       Float     @db.Float
+  ORL_ART_DEPOSIT_UNIT_HT           Float     @db.Float
+  ORL_ART_DEPOSIT_UNIT_TTC          Float     @db.Float
+  ORL_ART_QUANTITY                  Int       @default(1) @db.UnsignedSmallInt
+  ORL_ART_PRICE_BUY_HT              Float     @db.Float
+  ORL_ART_PRICE_BUY_TTC             Float     @db.Float
+  ORL_ART_PRICE_SELL_HT             Float     @db.Float
+  ORL_ART_PRICE_SELL_TTC            Float     @db.Float
+  ORL_ART_DEPOSIT_HT                Int
+  ORL_ART_DEPOSIT_TTC               Float     @default(0.00) @db.Float
+  ORL_SPL_ID                        Int?      @default(0) @db.UnsignedSmallInt
+  ORL_SPL_NAME                      String?   @db.VarChar(200)
+  ORL_SPL_DATE                      DateTime? @db.DateTime(0)
+  ORL_SPL_PRICE_BUY_UNIT_HT         Float?    @db.Float
+  ORL_SPL_PRICE_BUY_UNIT_TTC        Float?    @db.Float
+  ORL_SPL_PRICE_BUY_HT              Float?    @db.Float
+  ORL_SPL_PRICE_BUY_TTC             Float?    @db.Float
+  ORL_WEBSITE_URL                   String?   @db.VarChar(255)
+  ORL_ORLS_ID                       Int       @default(1) @db.SmallInt
+  ORL_EQUIV_ID                      Int       @default(0)
+  XTR_ORDER                         XTR_ORDER @relation(fields: [ORL_ORD_ID], references: [ORD_ID], onUpdate: Restrict, map: "FK_ORL_ORD_ID")
+
+  @@index([ORL_ART_QUANTITY], map: "ORL_ART_QUANTITY")
+  @@index([ORL_ART_REF], map: "ORL_ART_REF")
+  @@index([ORL_ART_REF_CLEAN], map: "ORL_ART_REF_CLEAN")
+  @@index([ORL_ID], map: "ORL_ID")
+  @@index([ORL_ORD_ID], map: "ORL_ORD_ID")
+  @@index([ORL_PG_ID], map: "ORL_PG_ID")
+  @@index([ORL_PM_ID], map: "ORL_PM_ID")
+  @@index([ORL_SPL_DATE], map: "ORL_SPL_DATE")
+  @@index([ORL_SPL_ID], map: "ORL_SPL_ID")
+  @@index([ORL_SPL_NAME], map: "ORL_SPL_NAME")
+  @@map("___XTR_ORDER_LINE")
+}
+
+model XTR_ORDER_LINE_EQUIV_TICKET {
+  ORLET_ID         Int   @id @default(autoincrement())
+  ORLET_ORD_ID     Int
+  ORLET_ORL_ID     Int
+  ORLET_EQUIV_ID   Int
+  ORLET_AMOUNT_TTC Float @db.Float
+
+  @@map("___XTR_ORDER_LINE_EQUIV_TICKET")
+}
+
+model XTR_ORDER_LINE_STATUS {
+  ORLS_ID      Int    @id @default(autoincrement())
+  ORLS_NAME    String @db.VarChar(255)
+  ORLS_ACTION  String @db.VarChar(255)
+  ORLS_COLOR   String @default("f7f8f9") @db.VarChar(6)
+  ORLS_DEPT_ID Int
+
+  @@map("___XTR_ORDER_LINE_STATUS")
+}
+
+model XTR_ORDER_STATUS {
+  ORDS_ID      Int    @id @default(autoincrement())
+  ORDS_NAMED   String @db.VarChar(255)
+  ORDS_ACTION  String @db.VarChar(255)
+  ORDS_COLOR   String @default("f7f8f9") @db.VarChar(6)
+  ORDS_DEPT_ID Int
+
+  @@map("___XTR_ORDER_STATUS")
+}
+
+model XTR_SUPPLIER {
+  SPL_ID      Int     @id @default(autoincrement()) @db.UnsignedSmallInt
+  SPL_NAME    String  @db.VarChar(255)
+  SPL_ALIAS   String  @unique(map: "SPL_ALIAS_2") @db.VarChar(255)
+  SPL_DISPLAY Boolean
+  SPL_SORT    Int     @db.SmallInt
+
+  @@index([SPL_ALIAS], map: "SPL_ALIAS")
+  @@index([SPL_ID], map: "SPL_ID")
+  @@index([SPL_SORT], map: "SPL_SORT")
+  @@map("___XTR_SUPPLIER")
+}
+
+model XTR_SUPPLIER_LINK_PM {
+  SLPM_ID      Int     @id @default(autoincrement()) @db.UnsignedInt
+  SLPM_PM_ID   Int     @db.UnsignedSmallInt
+  SLPM_SPL_ID  Int     @db.UnsignedSmallInt
+  SLPM_DISPLAY Boolean @default(false)
+
+  @@index([SLPM_DISPLAY], map: "SLPM_DISPLAY")
+  @@index([SLPM_PM_ID], map: "SLPM_PM_ID")
+  @@index([SLPM_SPL_ID], map: "SLPM_SPL_ID")
+  @@map("___XTR_SUPPLIER_LINK_PM")
+}
+
+model ic_postback {
+  ID_IC_POSTBACK Int       @id @default(autoincrement()) @db.UnsignedInt
+  id_com         String?   @db.VarChar(25)
+  Status         String?   @db.VarChar(25)
+  StatusCode     String?   @db.VarChar(25)
+  idsite         Int?      @db.TinyInt
+  idste          Int       @db.TinyInt
+  OrderID        String?   @db.VarChar(25)
+  PaymentID      String?   @db.VarChar(25)
+  TransactionID  String?   @db.VarChar(25)
+  Amount         String?   @db.VarChar(25)
+  Currency       String?   @db.VarChar(25)
+  PaymentMethod  String?   @db.VarChar(25)
+  Ip             String    @db.VarChar(25)
+  Ips            String    @db.VarChar(25)
+  DatePayment    DateTime? @db.DateTime(0)
+
+  @@index([DatePayment], map: "DatePayment")
+  @@index([OrderID], map: "OrderID")
+  @@index([PaymentID], map: "PaymentID")
+  @@index([PaymentMethod], map: "PaymentMethod")
+  @@index([Status], map: "Status")
+  @@index([id_com], map: "id_com")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  amount          Float
+  currency        String
+  status          String
+  createdAt       DateTime @default(now())
+  refunds         Refund[]
+  refundedAmount  Float?   @default(0)
+  refundDate      DateTime?
+}
+
+model Refund {
+  id              String   @id @default(uuid())
+  paymentId       String
+  amount          Float
+  refundId        String   @unique // ID PayPal du remboursement
+  status          String   // COMPLETED, PENDING, FAILED
+  reason          String?
+  createdAt       DateTime @default(now())
+  payment         Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+model AutoType {
+  id          Int        @id @default(autoincrement())
+  name        String
+  alias       String
+  powerPS     Int
+  body        String
+  fuel        String
+  yearFrom    Int
+  yearTo      Int?
+  isDisplayed Boolean    @default(true)
+  modeleId    Int
+  modele      AutoModele @relation(fields: [modeleId], references: [id])
+}
+
+model AutoModele {
+  id          Int         @id @default(autoincrement()) 
+  name        String
+  alias       String
+  isDisplayed Boolean     @default(true)
+  marqueId    Int
+  marque      AutoMarque  @relation(fields: [marqueId], references: [id])
+  types       AutoType[]
+  model3DUrl  String?     // URL du modèle GLTF
+  chatHistory ChatMessage[]
+  reviews     Review[]
+  videoUrl    String?
+  arModelUrl  String?
+  specifications ModelSpecification?
+}
+
+model AutoMarque {
+  id          Int         @id @default(autoincrement())
+  name        String
+  alias       String 
+  isDisplayed Boolean     @default(true)
+  modeles     AutoModele[]
+  logo        String?
+  relfollow   Boolean     @default(true)
+  seoData     SeoMarque?
+}
+
+model SeoMarque {
+  id          Int       @id @default(autoincrement())
+  marqueId    Int       
+  title       String    
+  description String
+  keywords    String
+  marque      AutoMarque @relation(fields: [marqueId], references: [id])
+}
+
+model UserFavorite {
+  id        String   @id @default(uuid())
+  userId    String
+  modelId   Int
+  createdAt DateTime @default(now())
+
+  user  User      @relation(fields: [userId], references: [id])
+  model AutoModele @relation(fields: [modelId], references: [id])
+
+  @@unique([userId, modelId])
+  @@index([modelId])
+}
+
+model ModelView {
+  id       String    @id @default(uuid())
+  modelId  Int
+  userId   String?
+  viewedAt DateTime  @default(now())
+
+  model AutoModele  @relation(fields: [modelId], references: [id])
+  user  User?      @relation(fields: [userId], references: [id])
+
+  @@index([modelId])
+  @@index([userId])
+}
+
+model UserPreferences {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  favoriteModels Json     @default("[]")
+  recentSearches Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id])
+  notifications Notification[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  modelId   Int?
+  type      String   // "PRICE_DROP", "NEW_MODEL", etc.
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user       UserPreferences @relation(fields: [userId], references: [userId])
+  model      AutoModele?     @relation(fields: [modelId], references: [id])
+
+  @@index([userId])
+  @@index([modelId])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  endpoint  String
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model ChatMessage {
+  id        String    @id @default(uuid())
+  modelId   Int
+  question  String    @db.Text
+  answer    String    @db.Text
+  createdAt DateTime  @default(now())
+  
+  model     AutoModele @relation(fields: [modelId], references: [id])
+
+  @@index([modelId])
+}
+
+model Review {
+  id        String    @id @default(uuid())
+  modelId   Int
+  userId    String
+  rating    Int       // Note sur 5
+  comment   String    @db.Text
+  createdAt DateTime  @default(now())
+  
+  model     AutoModele @relation(fields: [modelId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([modelId])
+  @@index([userId])
+}
+
+model ModelSpecification {
+  id          String   @id @default(uuid())
+  modelId     Int      @unique
+  engine      String
+  horsepower  Int
+  fuelType    String
+  consumption Float
+  emissions   Float
+  acceleration Float   // 0-100 km/h
+  maxSpeed    Int
+  weight      Int
+  dimensions  Json     // {length, width, height}
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  model      AutoModele @relation(fields: [modelId], references: [id])
+}
+
+model CarComparison {
+  id        String   @id @default(uuid())
+  userId    String
+  carIds    Json     // Array des IDs de voitures comparées
+  results   Json     // Résultats de la comparaison
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model PriceAlert {
+  id         String   @id @default(uuid())
+  userId     String
+  modelId    Int
+  priceLimit Float
+  notified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  user       User       @relation(fields: [userId], references: [id])
+  model      AutoModele @relation(fields: [modelId], references: [id])
+
+  @@index([userId])
+  @@index([modelId])
+}
+
+model UserHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  modelId   Int
+  action    String   // "viewed" | "purchased" | "compared"
+  metadata  Json?    // Données additionnelles sur l'action
+  createdAt DateTime @default(now())
+  
+  user      User       @relation(fields: [userId], references: [id])
+  model     AutoModele @relation(fields: [modelId], references: [id])
+
+  @@index([userId])
+  @@index([modelId])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String
+  alias       String   @unique
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  gammes      Gamme[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Gamme {
+  id          Int      @id @default(autoincrement())
+  name        String
+  alias       String   @unique
+  description String?  @db.Text
+  image       String
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  models      AutoModele[]
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+model AutoMarque {
+  id        Int          @id @default(autoincrement())
+  name      String       @map("MARQUE_NAME") 
+  alias     String       @map("MARQUE_ALIAS")
+  logo      String?      @map("MARQUE_LOGO")
+  display   Boolean      @default(true) @map("MARQUE_DISPLAY")
+  sort      Int          @default(0) @map("MARQUE_SORT")
+  top       Boolean      @default(false) @map("MARQUE_TOP")
+  models    AutoModel[]
+
+  @@map("AUTO_MARQUE")
+}
+
+model AutoModel {
+  id        Int        @id @default(autoincrement()) 
+  name      String     @map("MODELE_NAME")
+  alias     String     @map("MODELE_ALIAS")
+  marqueId  Int        @map("MODELE_MARQUE_ID")
+  display   Boolean    @default(true) @map("MODELE_DISPLAY")
+  sort      Int        @default(0) @map("MODELE_SORT")
+  marque    AutoMarque @relation(fields: [marqueId], references: [id])
+  types     AutoType[]
+
+  @@map("AUTO_MODELE")
+}
+
+model AutoType {
+  id         Int       @id @default(autoincrement())
+  name       String    @map("TYPE_NAME") 
+  alias      String    @map("TYPE_ALIAS")
+  power      Int       @map("TYPE_POWER_PS")
+  modelId    Int       @map("TYPE_MODELE_ID")
+  display    Boolean   @default(true) @map("TYPE_DISPLAY")
+  model      AutoModel @relation(fields: [modelId], references: [id])
+
+  @@map("AUTO_TYPE")
 }

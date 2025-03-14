@@ -1,0 +1,7 @@
+User-agent: * 
+Disallow: /_form.get.car.*
+Disallow: /fiche/
+Disallow: /find/
+Disallow: /searchmine/
+Disallow: /account/
+Disallow: /cart/*

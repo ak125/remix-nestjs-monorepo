@@ -1,0 +1,8273 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Définissez vos modèles ici
+
+model AdminNotification {
+  id          String    @id @default(uuid())
+  type        String    // PAYMENT, REFUND, ERROR, etc.
+  category    String    // PAYMENT, CUSTOMER, SYSTEM, etc.
+  title       String
+  message     String
+  priority    String    @default("NORMAL")  // LOW, NORMAL, HIGH, URGENT
+  isRead      Boolean   @default(false)
+  userId      String?   // Admin qui a lu la notification
+  readAt      DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  @@index([type, category])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model AdminAlert {
+  id          String    @id @default(uuid())
+  title       String
+  message     String
+  type        String    // payment, order, refund, etc.
+  severity    String    // info, warning, error
+  metadata    Json?     
+  isRead      Boolean   @default(false)
+  readBy      String?   // Admin ID
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([type])
+  @@index([isRead])
+  @@index([readBy])
+  @@index([createdAt])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  paymentMethod String
+  status        String      @default("PENDING")  // PENDING, PAID, FAILED, REFUNDED
+  totalAmount   Float
+  currency      String      @default("EUR")
+  items         OrderItem[]
+  payment       Payment?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  customer      Customer    @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  productName String
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  metadata    Json?
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Payment {
+  id              String    @id @default(cuid())
+  orderId         String    @unique
+  order           Order     @relation(fields: [orderId], references: [id])
+  status          String    @default("PENDING")  // PENDING, SUCCESS, FAILED, REFUNDED
+  amount          Float
+  currency        String    @default("EUR")
+  provider        String    // PAYPAL, STRIPE
+  providerTxnId   String?   // ID transaction externe
+  metadata        Json?     // Données supplémentaires du provider
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+  refundedAt      DateTime?
+  failureReason   String?
+  failureCode     String?
+  failedAt        DateTime?
+  attempts        Int       @default(0)
+  lastAttemptAt   DateTime?
+  rejectionHistory RejectedPayment[]
+  lastFailureAt    DateTime?
+  retryCount      Int         @default(0)
+  maxRetries      Int         @default(3)
+  abortedAt       DateTime?
+  abortReason     String?
+  abortCode       String?
+  abortHistory    PaymentAborted[]
+
+  @@index([status])
+  @@index([provider])
+  @@index([failedAt])
+  @@index([lastAttemptAt])
+  @@index([abortedAt])
+}
+
+model RejectedPayment {
+  id            String    @id @default(cuid())
+  paymentId     String
+  payment       Payment   @relation(fields: [paymentId], references: [id])
+  reason        String
+  errorCode     String?
+  errorDetails  Json?
+  createdAt     DateTime  @default(now())
+  metadata      Json?
+
+  @@index([paymentId])
+  @@index([createdAt])
+}
+
+model PaymentAborted {
+  id            String    @id @default(cuid())
+  paymentId     String
+  payment       Payment   @relation(fields: [paymentId], references: [id])
+  reason        String
+  code          String?
+  details       Json?
+  createdAt     DateTime  @default(now())
+
+  @@index([paymentId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // payment_success, payment_failed, refund_issued
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement()) @map("CNFA_ID")
+  login     String   @unique @map("CNFA_LOGIN")
+  keylog    String   @map("CNFA_KEYLOG") 
+  level     Int      @map("CNFA_LEVEL")
+  active    Boolean  @default(false) @map("CNFA_ACTIV")
+
+  @@map("___CONFIG_ADMIN")
+}
+
+model AutoMarque {
+  id          Int         @id @default(autoincrement()) @map("MARQUE_ID")
+  alias       String      @map("MARQUE_ALIAS")
+  name        String      @map("MARQUE_NAME")
+  display     Boolean     @default(true) @map("MARQUE_DISPLAY")
+  modeles     AutoModele[]
+
+  @@map("AUTO_MARQUE")
+}
+
+model AutoModele {
+  id          Int        @id @default(autoincrement()) @map("MODELE_ID")
+  marqueId    Int        @map("MODELE_MARQUE_ID")
+  alias       String     @map("MODELE_ALIAS")
+  name        String     @map("MODELE_NAME") 
+  display     Boolean    @default(true) @map("MODELE_DISPLAY")
+  types       AutoType[]
+  marque      AutoMarque @relation(fields: [marqueId], references: [id])
+
+  @@map("AUTO_MODELE")
+}
+
+model AutoType {
+  id          Int         @id @default(autoincrement()) @map("TYPE_ID")
+  modeleId    Int         @map("TYPE_MODELE_ID")
+  alias       String      @map("TYPE_ALIAS")
+  name        String      @map("TYPE_NAME")
+  fuel        String?     @map("TYPE_FUEL")
+  powerPS     Int?        @map("TYPE_POWER_PS")
+  yearFrom    Int?        @map("TYPE_YEAR_FROM")
+  yearTo      Int?        @map("TYPE_YEAR_TO") 
+  display     Boolean     @default(true) @map("TYPE_DISPLAY")
+  modele      AutoModele  @relation(fields: [modeleId], references: [id])
+  mines       TypeMine[]
+
+  @@map("AUTO_TYPE")
+}
+
+model TypeMine {
+  id        Int      @id @default(autoincrement()) @map("TNC_TYPE_ID")
+  cnit      String   @unique @map("TNC_CNIT")
+  typeId    Int      @map("TYPE_ID") 
+  type      AutoType @relation(fields: [typeId], references: [id])
+
+  @@map("AUTO_TYPE_NUMBER_CODE")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  role      UserRole   @default(USER)
+  cart      Cart?
+  orders    Order[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String
+  quantity  Int      @default(1)
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GoogleTokens {
+  id          String    @id @default(cuid())
+  type        String    @unique // SEARCH_CONSOLE, ANALYTICS, etc.
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("google_tokens")
+}
+
+model Sitemap {
+  id             String    @id @default(cuid())
+  url            String    @unique
+  lastDownloaded DateTime?
+  status         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("sitemaps")
+}
+
+model SeoMetrics {
+  id          String   @id @default(cuid())
+  pageUrl     String
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([pageUrl, date])
+  @@index([date])
+  @@index([pageUrl])
+  @@map("seo_metrics")
+}
+
+// Configuration tables
+model Config {
+  id           Int    @id @default(autoincrement()) @map("CNF_ID")
+  language     Int    @map("CNF_HR")
+  name         String @map("CNF_NAME")
+  domain       String @map("CNF_DOMAIN")
+  address      String @map("CNF_ADDRESS")
+  email        String @map("CNF_MAIL")
+  phone        String @map("CNF_PHONE")
+  phoneCall    String @map("CNF_PHONE_CALL")
+  groupName    String @map("CNF_GROUP_NAME")
+  groupDomain  String @map("CNF_GROUP_DOMAIN")
+  ownerName    String @map("CNF_OWNER_NAME")
+  ownerDomain  String @map("CNF_OWNER_DOMAIN")
+  
+  @@map("___CONFIG")
+}
+
+model ConfigIP {
+  id        Int    @id @default(autoincrement()) @map("CNFIP_ID")
+  name      String @map("CNFIP_NAME")
+  alias     String @map("CNFIP_ALIAS")
+  value     String @map("CNFIP_VALUE")
+  
+  @@map("___CONFIG_IP")
+}
+
+// Marqueurs statiques pour référence
+model StaticMarker {
+  id       Int    @id @default(autoincrement())
+  type     String // PRICE_LOW, OFFERS, COMPATIBILITY
+  value    String
+  position Int
+  active   Boolean @default(true)
+
+  @@map("static_markers")
+  @@index([type])
+}
+
+model FooterMenu {
+  id        Int       @id @default(autoincrement()) @map("FM_ID")
+  title     String    @map("FM_TITLE")
+  alias     String    @map("FM_ALIAS")
+  level     Int       @map("FM_LEVEL")
+  relFollow Boolean   @default(false) @map("FM_RELFOLLOW")
+  position  Int       @default(0)
+  active    Boolean   @default(true) @map("FM_ACTIVE")
+
+  @@map("___FOOTER_MENU")
+}
+
+model GoneUrl {
+  id          String   @id @default(cuid())
+  path        String   @unique
+  oldUrl      String?  // The original URL that's gone
+  reason      String?  // Optional reason for removal
+  replacedBy  String?  // Optional new URL that replaces this one
+  removedAt   DateTime @default(now())
+  
+  @@index([path])
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  status    String   @default("ACTIVE") // ACTIVE, UNSUBSCRIBED, BOUNCED
+  source    String?  // Website, campaign, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("newsletter_subscribers")
+  @@index([email])
+  @@index([status])
+}
+
+model AdminUser {
+  id        Int       @id @default(autoincrement())
+  login     String    @unique
+  password  String
+  level     Int       @default(1)
+  firstName String?
+  lastName  String?
+  email     String?
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  sessions  AdminSession[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id        String   @id @default(uuid())
+  adminId   Int
+  admin     AdminUser @relation(fields: [adminId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_sessions")
+  @@index([adminId])
+  @@index([token])
+}
+
+model AdminPermission {
+  id          Int     @id @default(autoincrement()) 
+  name        String  @unique
+  description String?
+  minLevel    Int     @default(1)
+  
+  @@map("admin_permissions")
+}
+
+model PageZ {
+  id           Int       @id @default(autoincrement())
+  mfId         Int
+  pgId         Int
+  pgAlias      String?
+  pgName       String
+  mfName       String
+  seoTitle     String?   @db.Text
+  seoDesc      String?   @db.Text
+  content      String?   @db.LongText
+  lastModified DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
+
+  @@unique([mfId, pgId])
+  @@map("page_z_content")
+  @@index([pgId])
+  @@index([mfId])
+}
+
+model Marque {
+  id          Int     @id @default(autoincrement())
+  name        String
+  nameMeta    String  @map("name_meta")
+  alias       String
+  logo        String
+  display     Boolean @default(true)
+  sort        Int     @default(0)
+  top         Boolean @default(false)
+  modeles     Modele[]
+
+  @@map("marque_auto")
+  @@index([display])
+  @@index([sort])
+}
+
+model Modele {
+  id          Int     @id @default(autoincrement())
+  marqueId    Int     @map("marque_id")
+  name        String
+  alias       String
+  display     Boolean @default(true)
+  sort        Int     @default(0)
+  marque      Marque  @relation(fields: [marqueId], references: [id])
+  types       Type[]
+
+  @@map("modele_auto")
+  @@index([marqueId])
+  @@index([display])
+}
+
+model Type {
+  id          Int     @id @default(autoincrement())
+  modeleId    Int     @map("modele_id")
+  name        String
+  alias       String
+  fuel        String?
+  powerPS     Int?    @map("power_ps")
+  yearFrom    Int?    @map("year_from")
+  yearTo      Int?    @map("year_to")
+  display     Boolean @default(true)
+  modele      Modele  @relation(fields: [modeleId], references: [id])
+
+  @@map("type_auto")
+  @@index([modeleId])
+  @@index([display])
+}
+
+model CatalogFamily {
+  id          Int     @id @default(autoincrement()) @map("mf_id")
+  name        String  @map("mf_name")
+  nameSystem  String? @map("mf_name_system")
+  description String? @map("mf_description")
+  image       String  @map("mf_pic")
+  display     Boolean @default(true) @map("mf_display")
+  sort        Int     @default(0) @map("mf_sort")
+  gammes      CatalogGammeRelation[]
+
+  @@map("catalog_family")
+  @@index([display])
+  @@index([sort])
+}
+
+model CatalogGamme {
+  id          Int     @id @default(autoincrement()) @map("pg_id")
+  name        String  @map("pg_name")
+  nameUrl     String  @map("pg_name_url")
+  nameMeta    String  @map("pg_name_meta")
+  alias       String  @map("pg_alias")
+  image       String  @map("pg_img")
+  pic         String? @map("pg_pic")
+  level       Int     @default(1) @map("pg_level")
+  display     Boolean @default(true) @map("pg_display")
+  top         Boolean @default(false) @map("pg_top")
+  families    CatalogGammeRelation[]
+  seo         GammeSeo?
+
+  @@map("catalog_gamme")
+  @@index([display])
+  @@index([level])
+  @@index([top])
+}
+
+model CatalogGammeRelation {
+  id          Int           @id @default(autoincrement()) @map("mc_id")
+  familyId    Int           @map("mc_mf_id")
+  gammeId     Int           @map("mc_pg_id")
+  sort        Int           @default(0) @map("mc_sort")
+  family      CatalogFamily @relation(fields: [familyId], references: [id])
+  gamme       CatalogGamme  @relation(fields: [gammeId], references: [id])
+
+  @@map("catalog_gamme_relation")
+  @@index([familyId])
+  @@index([gammeId])
+}
+
+model Equipementier {
+  id          Int     @id @default(autoincrement()) @map("pm_id")
+  name        String  @map("pm_name")
+  nameMeta    String  @map("pm_name_meta")
+  logo        String  @map("pm_logo")
+  preview     String  @map("pm_preview")
+  display     Boolean @default(true) @map("pm_display")
+  top         Boolean @default(false) @map("pm_top")
+  sort        Int     @default(0) @map("pm_sort")
+
+  @@map("equipementier_auto")
+  @@index([display])
+  @@index([top])
+  @@index([sort])
+}
+
+model GammeSeo {
+  id          Int          @id @default(autoincrement()) @map("sg_id")
+  gammeId     Int          @unique @map("sg_pg_id")
+  title       String       @map("sg_title") @db.Text
+  description String       @map("sg_descrip") @db.Text
+  gamme       CatalogGamme @relation(fields: [gammeId], references: [id])
+
+  @@map("gamme_seo")
+}
+
+model BlogAdvice {
+  id          Int     @id @default(autoincrement()) @map("ba_id")
+  gammeId     Int     @map("ba_pg_id")
+  preview     String  @map("ba_preview") @db.Text
+
+  @@map("blog_advice")
+  @@index([gammeId])
+}
+
+model AppUser {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique
+  email      String?   @unique
+  password   String    // Stocké sous forme de hash
+  role       String    // ADMIN, USER, EDITOR, etc.
+  isActive   Boolean   @default(true)
+  lastLogin  DateTime?
+  sessions   AppSession[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("app_users")
+  @@index([username])
+  @@index([email])
+  @@index([role])
+}
+
+model AppSession {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_sessions")
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// Modèles pour les gammes et familles
+model Gamme {
+  id            String    @id @default(uuid())
+  alias         String    @unique
+  name          String
+  nameMeta      String
+  relFollow     Boolean   @default(false)
+  img           String?
+  wall          String?
+  mfId          String
+  family        Family    @relation(fields: [mfId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  products      Product[]
+  seoContent    String?   @db.Text
+
+  @@index([alias])
+  @@map("gammes")
+}
+
+model Family {
+  id          String    @id @default(uuid())
+  name        String    
+  nameMeta    String
+  display     Boolean   @default(true)
+  icon        String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  gammes      Gamme[]
+
+  @@map("families")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String?   @db.Text
+  price       Float
+  sku         String    @unique
+  stock       Int       @default(0)
+  gammeId     String
+  gamme       Gamme     @relation(fields: [gammeId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  images      String?
+  
+  @@index([gammeId])
+  @@map("products")
+}
+
+// Ajouter ces modèles à votre schéma Prisma existant
+
+model BlockedBot {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  reason    String?
+  createdAt DateTime @default(now())
+  active    Boolean  @default(true)
+}
+
+model BotDetection {
+  id         Int      @id @default(autoincrement())
+  userAgent  String
+  ipAddress  String
+  path       String
+  detectedAt DateTime @default(now())
+  suspicious Boolean  @default(false)
+  blocked    Boolean  @default(false)
+}
+
+model RobotsRule {
+  id            Int               @id @default(autoincrement())
+  userAgent     String
+  sortOrder     Int
+  disallowRules RobotsDisallow[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model RobotsDisallow {
+  id        Int         @id @default(autoincrement())
+  path      String
+  rule      RobotsRule  @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  ruleId    Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model RobotsSitemap {
+  id        Int      @id @default(autoincrement())
+  url       String
+  priority  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model RobotsConfig {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model NotificationError {
+  id           Int      @id @default(autoincrement())
+  engine       String   @unique  // Un seul enregistrement par moteur de recherche
+  failureCount Int      @default(1)
+  lastAttempt  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String
+  timestamp  DateTime @default(now())
+}
+
+model SitemapNotificationLog {
+  id         Int      @id @default(autoincrement())
+  engine     String
+  statusCode Int
+  message    String

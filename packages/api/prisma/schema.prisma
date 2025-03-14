@@ -1,0 +1,612 @@
+model BlogGuide {
+  id          Int      @id @default(autoincrement())
+  title       String
+  alias       String   @unique
+  preview     String?
+  image       String?
+  content     String
+  visitCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Marque {
+  id         Int      @id @default(autoincrement())
+  alias      String   @unique
+  name       String
+  metaName   String?
+  logoUrl    String?
+  display    Boolean  @default(true)
+  sort       Int?
+}
+
+model Page {
+  id          Int      @id @default(autoincrement())
+  slug        String   
+  language    String   @default("fr")
+  title       String
+  description String
+  keywords    String?
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([slug, language])
+}
+
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  name        String
+  type        String
+  os          String
+  browser     String
+  createdAt   DateTime @default(now())
+  devis       DevisRequest?
+}
+
+model DevisRequest {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  details     String   @db.Text
+  status      String   @default("pending")
+  deviceId    String?  @unique
+  device      Device?  @relation(fields: [deviceId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String
+  phoneNumber String
+  amount      Float
+  status      String
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  stripeId    String   @unique
+  paymentId   String
+  amount      Float
+  reason      String
+  status      String
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+}
+
+model SecurityPolicy {
+  id        String   @id @default(cuid())
+  language  String
+  content   String   @db.Text
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([language, version])
+}
+
+model SecurityLog {
+  id         String   @id @default(cuid())
+  policyId   String
+  content    String   @db.Text
+  language   String
+  version    Int
+  createdAt  DateTime @default(now())
+  userId     String
+  userEmail  String
+  changeType String
+}
+
+model SecurityArchive {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  language    String
+  version     Int
+  archivedAt  DateTime @default(now())
+  archivedBy  String
+  signature   String?
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  data      Json?
+}
+
+model PageContent {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  content     String    @db.Text
+  language    String    @default("fr")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  version     Int       @default(1)
+
+  @@index([slug, language])
+}
+
+model PageHistory {
+  id          String    @id @default(cuid())
+  pageId      String
+  title       String
+  content     String    @db.Text
+  version     Int
+  createdAt   DateTime  @default(now())
+  updatedBy   String
+  userEmail   String
+}
+
+model CPUC {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  language  String   @default("fr")
+
+  @@unique([version, language])
+}
+
+model CPUCHistory {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  version     Int
+  language    String
+  updatedAt   DateTime @default(now())
+  updatedBy   String
+  userEmail   String
+  signature   String?
+}
+
+model Mine {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  location    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String?  @db.Text
+  active      Boolean  @default(true)
+
+  @@index([type])
+  @@index([location])
+}
+
+model MLContent {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @db.Text
+  content       String   @db.Text
+  category      String?
+  tags          String[]
+  imageUrl      String?
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  viewCount     Int      @default(0)
+
+  @@index([category])
+  @@index([tags])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          String    @default("USER")
+  emailVerified DateTime?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  preferences   Json?     @default("{}")
+
+  @@index([email])
+}
+
+model Delivery {
+  id             String    @id @default(cuid())
+  orderId        String    @unique
+  trackingNumber String    @unique
+  carrier        String
+  status         String    @default("pending")
+  estimatedDate  DateTime
+  actualDate     DateTime?
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  order          Order     @relation(fields: [orderId], references: [id])
+  events         DeliveryEvent[]
+  notifications  DeliveryNotification[]
+
+  @@index([trackingNumber])
+  @@index([status])
+}
+
+model DeliveryEvent {
+  id          String   @id @default(cuid())
+  deliveryId  String
+  status      String
+  location    String?
+  message     String   @db.Text
+  timestamp   DateTime @default(now())
+  delivery    Delivery @relation(fields: [deliveryId], references: [id])
+
+  @@index([deliveryId])
+}
+
+model DeliveryNotification {
+  id         String   @id @default(cuid())
+  deliveryId String
+  type       String   // email, sms
+  recipient  String
+  status     String
+  sentAt     DateTime @default(now())
+  delivery   Delivery @relation(fields: [deliveryId], references: [id])
+
+  @@index([deliveryId])
+}
+
+model Stock {
+  id            String         @id @default(cuid())
+  reference     String         @unique
+  name          String
+  description   String?        @db.Text
+  quantity      Int           @default(0)
+  minQuantity   Int           @default(0)
+  category      String?
+  location      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  history       StockHistory[]
+  alerts        StockAlert[]
+
+  @@index([reference])
+  @@index([category])
+}
+
+model StockHistory {
+  id          String    @id @default(cuid())
+  stockId     String
+  oldQuantity Int
+  newQuantity Int
+  reason      String?   @db.Text
+  userId      String
+  createdAt   DateTime  @default(now())
+  stock       Stock     @relation(fields: [stockId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([stockId])
+  @@index([userId])
+}
+
+model StockAlert {
+  id          String    @id @default(cuid())
+  stockId     String
+  type        String    // low_stock, out_of_stock
+  message     String    @db.Text
+  resolved    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  stock       Stock     @relation(fields: [stockId], references: [id])
+
+  @@index([stockId])
+  @@index([type])
+}
+
+model StockMovement {
+  id          String    @id @default(cuid())
+  stockId     String
+  stock       Stock     @relation(fields: [stockId], references: [id])
+  type        String    // in, out, adjustment
+  quantity    Int
+  oldQuantity Int
+  newQuantity Int
+  reason      String?   @db.Text
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([stockId])
+  @@index([type])
+  @@index([userId])
+}
+
+model StockNotification {
+  id        String    @id @default(cuid())
+  stockId   String
+  stock     Stock     @relation(fields: [stockId], references: [id])
+  type      String    // low_stock, movement, alert
+  message   String    @db.Text
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([stockId])
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  orderNumber   String    @unique  // Format: YYNNNNN
+  clientId      String
+  client        User      @relation(fields: [clientId], references: [id])
+  status        String    @default("pending")
+  total         Float
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  items         OrderItem[]
+  history       OrderHistory[]
+
+  @@index([orderNumber])
+  @@index([status])
+  @@index([clientId])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  status      String   @default("pending")
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderHistory {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  status      String
+  notes       String?  @db.Text
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Supplier {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  name          String
+  alias         String          @unique
+  isActive      Boolean         @default(true)
+  sortOrder     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  history       SupplierHistory[]
+  manufacturerLinks ManufacturerLink[]
+
+  @@index([alias])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Manufacturer {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  name          String
+  alias         String          @unique 
+  logo          String?
+  quality       String?
+  isActive      Boolean         @default(true)
+  sortOrder     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  supplierLinks  ManufacturerLink[]
+
+  @@index([alias])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model ManufacturerLink {
+  id              String       @id @default(cuid())
+  supplierId      String
+  manufacturerId  String
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now())
+  
+  supplier        Supplier    @relation(fields: [supplierId], references: [id])
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  @@unique([supplierId, manufacturerId])
+  @@index([supplierId])
+  @@index([manufacturerId])
+}
+
+model SupplierHistory {
+  id          String    @id @default(cuid())
+  supplierId  String
+  action      String    // created, updated, linked, unlinked
+  details     Json
+  userId      String
+  createdAt   DateTime  @default(now())
+  
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([supplierId])
+  @@index([userId])
+}
+
+model Admin {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  name      String
+  firstName String
+  password  String
+  phone     String?
+  role      AdminRole     @default(ADMIN)
+  isActive  Boolean       @default(true)
+  session   AdminSession?
+  history   AdminHistory[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+
+  @@index([email])
+  @@index([role])
+}
+
+enum AdminRole {
+  SUPERADMIN
+  ADMIN
+  COMMERCIAL
+  SHIPPING
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  adminId   String   @unique
+  admin     Admin    @relation(fields: [adminId], references: [id])
+  expiresAt DateTime
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model AdminHistory {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  details   Json
+  ipAddress String?
+  createdAt DateTime @default(now())
+  admin     Admin    @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([action])
+}
+
+model OrderLine {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  status      String   @default("pending")
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  isReceived  Boolean  @default(false)
+  receivedAt  DateTime?
+  history     OrderLineHistory[]
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([status])
+}
+
+model OrderLineHistory {
+  id          String    @id @default(cuid())
+  lineId      String
+  line        OrderLine @relation(fields: [lineId], references: [id])
+  status      String
+  reason      String?   @db.Text
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([lineId])
+  @@index([userId])
+}
+
+model ActionLog {
+  id        String   @id @default(cuid())
+  type      String
+  details   Json
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model UserNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  message   String    @db.Text
+  type      String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // login, logout, activation, password_change
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  lastUsed  DateTime @default(now())
+  device    String?
+  ipAddress String?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}

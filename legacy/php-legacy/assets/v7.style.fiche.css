@@ -1,0 +1,77 @@
+html {
+  font-family: 'Rubik', sans-serif;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: none;
+  scroll-behavior: smooth;
+   }
+body {
+  font-family: 'Rubik', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #313233;
+  background: #fff;
+  text-align: left;
+  }
+html,body {
+  height: 100%;
+}
+@media only screen and (max-width: 767px){
+}
+@media only screen and (max-width: 599px){
+}
+@media only screen and (min-width: 600px) and (max-width: 767px){
+}
+@media only screen and (min-width: 768) and (max-width: 1023px){
+}
+
+/**
+DEFAULT CLASS
+**/
+button{  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; cursor: pointer; }
+button, input, select, textarea{ outline: none; }
+a{ -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; cursor: pointer; text-decoration: none; }
+a:hover{ -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; cursor: pointer; text-decoration: none; }
+.mymaxwidth{ max-width: 1280px; }
+.myminwidth{ max-width: 980px; }
+.containerPage{ padding-top: 27px; padding-bottom: 27px; text-align: center; width: 100%; }
+/**
+ARIANE & BEADCRUMBS
+**/
+.containerariane{ padding: 0px; display: block; }
+@media all and (max-width: 1023px){
+  .containerariane{ display: none; }
+}
+ol.breadcrumb{ background: none; text-transform: uppercase; padding-left: 0px; padding-top: 7px; padding-bottom: 4px; margin: 0px; 
+  color: #e53138; font-size: 13px; font-weight: 400; }
+ol.breadcrumb li{ padding: 0px; margin: 0px; padding-bottom: 7px; }
+ol.breadcrumb li a{ text-decoration: none; color: #525254; }
+ol.breadcrumb li span{ text-decoration: none; padding-left: 13px; padding-right: 13px; }
+
+/**
+PAGE FICHE
+**/
+.containerData{ padding-top: 37px; padding-bottom: 37px; }
+  .containerData img{ border: 1px solid #f1f2f3; }
+  .containerData h1{ text-align: left; font-size: 27px; font-weight: 500; color: #101112; padding: 0px; }
+  .containerData h1 b{ color: #e53138; }
+  .containerData .price{ font-size: 27px; line-height: 7px; color: #ea1c26; font-weight: 600; padding-bottom: 21px; }
+  .containerData .price u{ font-size: 10px; font-weight: 400; color: #777; text-decoration: none; }
+  .containerData .price strong{ display: inline-block; margin-top: 27px; font-weight: 500; font-size: 12px; }
+  .containerData h2{ text-align: left; font-size: 18px; font-weight: 500; color: #101112; padding: 0px; padding-top: 27px; }
+
+.containerwhitePage{ background: #fff; padding-top: 37px; padding-bottom: 37px; text-align: left; width: 100%; }
+      .containerwhitePage i{ font-size: 11px; font-weight: 400; color: #ea1c26; }
+      .containerwhitePage p{ text-align: justify; }
+.containergrayPage{ background: #f7f8f9; padding-top: 37px; padding-bottom: 37px; text-align: left; width: 100%; }
+
+/**
+TAB DATA
+**/
+.extra{ background: #fff; padding: 3px; border: 15px solid #f7f8f9; }
+.extra h2{ text-align: center; text-transform: uppercase; font-size: 16px; font-weight: 500; color: #101112; margin: 0px; padding: 0px; padding-top: 13px; padding-bottom: 13px; }
+.extratitle{ background: #3f454e; border-bottom: 1px solid #fff; color: #fff; font-weight: 400; padding: 7px; }
+.extraline1{ background: #efefef; padding: 7px; }
+.extraline2{ background: #f9f9f9; padding: 7px; }

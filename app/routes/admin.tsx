@@ -1,0 +1,20 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}  );    </div>      {/* ...existing layout code... */}      </header>        </div>          </div>            {/* ...existing header elements... */}            <NotificationCenter />          <div className="flex items-center gap-4">          {/* ...existing header code... */}        <div className="flex justify-between items-center px-6 py-4">      <header className="bg-white border-b">    <div className="min-h-screen">  return (export default function AdminLayout() {import { NotificationCenter } from '@/components/admin/NotificationCenter';

@@ -1,22 +1,29 @@
 import { type RemixService } from "@fafa/backend";
 import { type LinksFunction, type LoaderFunctionArgs, json } from "@remix-run/node";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData } from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, LiveReload } from "@remix-run/react";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
-// @ts-ignore
-import stylesheet from "./global.css?url";
-import logo from "./routes/_assets/logo-automecanik-dark.png";
+import Layout from "~/components/Layout";
+import styles from "./tailwind.css";
 import { getOptionalUser } from "./server/auth.server";
+import { supabase } from '~/utils/supabase.server';
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: styles },
 ];
 
 export const loader = async ({ request,context }: LoaderFunctionArgs) => {
   const user = await getOptionalUser({ context });
-  return json({ 
-    user
-    });
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  return json({
+    user,
+    isAuthenticated: !!session,
+    env: {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    }
+  });
 };
 
 export const useOptionalUser = () => {
@@ -35,32 +42,22 @@ declare module "@remix-run/node" {
   }
 }
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export default function App() {
   return (
-    <html lang="en" className="h-full">
+    <html>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body className="h-full bg-gray-100">
-        <div className="min-h-screen flex flex-col">
-          <Navbar logo={logo} />
-          <main className="flex-grow flex flex-col">
-            <div className="flex-grow">
-              {children}
-            </div>
-           </main>
-        </div>
-        <Footer />
-        <ScrollRestoration />
+      <body>
+        <Layout>
+          <Outlet />
+        </Layout>
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
-}
-
-export default function App() {
-  return <Outlet />;
 }

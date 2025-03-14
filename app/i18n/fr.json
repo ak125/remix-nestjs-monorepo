@@ -1,0 +1,29 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "logout": "Se déconnecter",
+    "cart": "Panier",
+    "search": "Rechercher",
+    "menu": "Menu"
+  },
+  "cart": {
+    "empty": "Votre panier est vide",
+    "add": "Ajouter au panier",
+    "remove": "Supprimer",
+    "total": "Total",
+    "checkout": "Commander",
+    "promo": {
+      "apply": "Appliquer",
+      "placeholder": "Code promo",
+      "invalid": "Code promo invalide",
+      "success": "Code promo appliqué"
+    }
+  },
+  "checkout": {
+    "payment": {
+      "title": "Paiement",
+      "button": "Payer maintenant",
+      "loading": "Redirection..."
+    }
+  }
+}

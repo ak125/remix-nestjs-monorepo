@@ -1,0 +1,495 @@
+html {
+  font-family: sans-serif;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -ms-overflow-style: scrollbar;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+body {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #101213;
+  text-align: left;
+  background: #ebebeb; }
+
+a{text-decoration: none; width: auto;}
+a:hover{text-decoration: none;}
+
+.centerVertical {
+display: inline-block;
+text-align: center;
+}
+.centerVertical::before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    width: 0px;
+}
+.nopadding{ padding:0px; }
+.nomargin{ margin:0px; }
+.widescreen{ max-width: 1280px; }
+.carousel-item{ height: 100vh; }
+
+/* classes des modals */
+.modal-lg{max-width: 90% !important;}
+.BODY-MODAL{ background: #fff; padding: 37px; padding-top: 17px; font-size: 16px; }
+.HEIGHT-MODAL { height: 80%; min-height: 380px; }
+.DARK-MODAL {  }
+.DARK-MODAL .modal-header{  font-size: 23px; font-weight: 400; padding:27px; color: #fff;  }
+h1.H1-MODAL{ padding: 0px; margin: 0px; padding-bottom: 21px; }
+
+/* imput des modal */
+.MODAL-LABEL-INPUT{ font-size: 16px; font-weight: 300; margin-bottom: 3px; text-align: left; }
+input.MODAL-INPUT{ width: 100%; padding: 7px; font-size: 16px; font-weight: 300; margin-bottom: 3px; }
+select.MODAL-INPUT{ width: 100%; padding: 7px; font-size: 16px; font-weight: 300; margin-bottom: 3px; }
+
+/* stats */
+.stat-blue{ color:#1da1f2; font-size: 16px; font-weight: 600; }
+.stat-green{ color:#25aa2b; font-size: 16px; font-weight: 600; }
+.stat-red{ color:#df1b19; font-size: 16px; font-weight: 600; }
+
+/* classe des liens */
+a.white{ color: #fff; text-decoration: underline; }
+a.blue{ color: #2f80e7; text-decoration: underline; }
+a.green{ color: #25aa2b; text-decoration: underline; }
+a.dark-gray{ color: #3a3b3c; text-decoration: underline; }
+
+
+a.link-as-button{ background: #25aa2b; border-bottom: 5px solid #038809; color: #fff; font-size: 15px; text-decoration: none; padding: 7px; }
+.sitemap-blue{ color:#1da1f2; font-size: 16px; font-weight: 400; }
+.sitemap-green{ color:#25aa2b; font-size: 16px; font-weight: 400; }
+.sitemap-red{ color:#df1b19; font-size: 16px; font-weight: 400; }
+button.sitemap-UPDATE{ border:0px; background: #25aa2b; border-bottom: 5px solid #038809; color: #fff; font-size: 15px; margin-bottom: 2px; }
+button.sitemap-UPDATEADD{ border:0px; background: #2196f3; border-bottom: 5px solid #2f80e7; color: #fff; font-size: 15px; margin-bottom: 2px; }
+button.sitemap-UPDATEINDEX{ border:0px; background: #e82042; border-bottom: 5px solid #ca1c39; color: #fff; font-size: 15px; margin-bottom: 2px; }
+/* message de reponse de form */
+.response-green{ background:#B7EE95; border:1px solid #25aa2b; color: #25aa2b; font-size: 17px; padding:7px; padding-bottom: 11px; margin-bottom:11px; text-align:center; }
+.response-red{ background:#FFC1C1; border:1px solid #df1b19; color: #df1b19; font-size: 17px; padding:7px; padding-bottom: 11px; margin-bottom:11px; text-align:center; }
+
+/* classe des box */
+div.white{ background: #fff; color:#3a3b3c;  }
+div.blue{ background: #2f80e7; }
+div.cyan{ background: #2196f3; }
+div.pink{ background: #ff00ff; }
+div.dark-pink{ background: #cc00cc; }
+div.light-gray{ background: #f1f5f9; }
+div.gray{ background: #7a7b7c; }
+div.dark-gray{ background: #3a3b3c; }
+div.black{ background: #010203; }
+div.red{ background: #df1b19; }
+div.dark-red{ background: #b61110; }
+div.green{ background: #25aa2b; }
+div.dark-green{ background: #038809; }
+div.sand{ background: #f57c00; }
+div.dark-sand{ background: #de7203; }
+div.fuchia{ background: #e82042; }
+div.dark-fuchia{ background: #ca1c39; }
+div.nuts{background: #52b006; }
+/* classes des boutons*/
+.ADD-TO-CART{ border:0px; padding: 11px; background: #abd904; border-bottom: 5px solid #89b702; color: #fff; font-size: 15px; width: 100%; margin-top: 4px; cursor: pointer; }
+.VALIDATE-MODAL{ border:0px; padding: 11px; background: #2196f3; border-bottom: 5px solid #2f80e7; color: #fff; font-size: 15px; padding-left: 27px; padding-right: 27px; margin-top: 4px; cursor: pointer; }
+button.CLOSE-MODAL{ border:0px; background: #3a3b3c; border-bottom: 5px solid #1a1b1c; color: #fff; font-size: 15px; padding-left: 27px; padding-right: 27px; }
+button.UPDATE{ border:0px; background: #25aa2b; border-bottom: 5px solid #038809; color: #fff; font-size: 15px; }
+button.UPDATEADD{ border:0px; background: #2196f3; border-bottom: 5px solid #2f80e7; color: #fff; font-size: 15px; }
+button.DELETE{ border:0px; background: #df1b19; border-bottom: 5px solid #b61110; color: #fff; font-size: 15px; }
+button.GALLERY{ border:0px; background: #7a7b7c; border-bottom: 5px solid #3a3b3c; color: #fff; font-size: 15px; }
+button.INSERT-LINK{ padding: 0px; border:0px; background: none; color: #fff; font-size: 17px; font-weight: 300; text-decoration: underline; }
+
+/* classes des titres*/
+h1{ font-size: 37px; color:#161719; padding: 0px; margin: 0px; font-weight: 400; }
+h2{ font-size: 17px; color:#161719; padding: 0px; margin: 0px; font-weight: 300; }
+h3{ font-size: 21px; color:#161719; padding: 0px; margin: 0px; font-weight: 400; }
+h5{ font-size: 27px; color:#fff; padding: 0px; margin: 0px; font-weight: 400; text-transform: uppercase; font-style: italic; }
+
+
+
+
+.GET-ACCESS-TITLE{ color: #fff; padding:11px; font-size: 19px; }
+.GET-ACCESS-CONTENT{ color: #fff; padding:27px; font-size: 16px; text-align: justify; }
+
+/**
+Page header
+**/ 
+.HEAD-CONTAINER{background:#52b006; z-index: 90; top: 0px; position: fixed; }
+  .HEAD-CONTAINER-MAIN-TITLE{  color:#ffffff; padding-top:7px; padding-bottom:7px; border-bottom: 1px solid #3e8803; }
+  .HEAD-CONTAINER-MAIN-MY-CART{ background:#52b006; padding: 0px; border: 1px solid #3e8803;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out;  }
+  .HEAD-CONTAINER-MAIN-MY-CART:hover{ background:#3e8803; padding: 0px; border: 1px solid #3e8803;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out;  }
+    .HEAD-CONTAINER-MAIN-MY-CART a{ color:#ffffff; font-size: 13px; text-decoration: none; text-transform: uppercase; display: block; width: 100%; height: 100%; padding: 5px; padding-top: 13px; padding-bottom: 13px; line-height: 17px; }
+    .HEAD-CONTAINER-MAIN-MY-CART img{ border: none; }
+  .HEAD-CONTAINER-MAIN-MY-ACCOUNT{ background:#52b006; padding: 0px; border: 1px solid #3e8803; border-left: 0px;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out;  }
+  .HEAD-CONTAINER-MAIN-MY-ACCOUNT:hover{ background:#3e8803; padding: 0px; border: 1px solid #3e8803; border-left: 0px;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out;  }
+    .HEAD-CONTAINER-MAIN-MY-ACCOUNT a{ color:#ffffff; font-size: 13px; text-decoration: none; text-transform: uppercase; display: block; width: 100%; height: 100%; padding: 5px; padding-top: 13px; padding-bottom: 13px; line-height: 17px; }
+    .HEAD-CONTAINER-MAIN-MY-ACCOUNT img{ border: none; }
+
+#MAIN-MENU-CONTAINER{ position:fixed; width:75px; top:0px; left:0px; z-index:200; background:#22243b; height:auto;  height:100%; padding:0px; }
+  #MENU-ICON-CONTAINER{ position:absolute; padding-top:29px; padding-bottom:29px; background:url(../img/menu-icon-gray.png) #191b32 center center no-repeat; 
+  width:100%; top:0; -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out;
+  cursor: pointer; }
+  #MENU-ICON-CONTAINER:hover{ position:absolute; padding-top:29px; padding-bottom:29px; background:url(../img/menu-icon-gray-on.png) #fff center center no-repeat; 
+  border-bottom:1px solid #414243; width:100%; top:0; -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; 
+  cursor: pointer; }
+  #MINI-LOGO-ICON-CONTAINER{ position:absolute; padding-top:21px; padding-bottom:21px; width:100%; bottom:1px; border-top:1px solid #414243; text-align:center;
+  color:#CFD1D2; font-size:11px; line-height:17px; }
+  #MAIN-LANG-CONTAINER{ position:absolute; padding-top:5px; padding-bottom:5px; width:100%; bottom:0; border-top:1px solid #414243; text-align:center;
+  color:#CFD1D2; font-size:11px; line-height:17px; }
+  #MAIN-LANG-CONTAINER img:hover{ -webkit-filter: grayscale(100%); filter: grayscale(100%); -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; }
+  #MAIN-LANG-CONTAINER img{ -webkit-filter: grayscale(0%); filter: grayscale(0%); -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; }
+
+/**
+Page welcome
+**/ 
+.Page-Welcome-Title{ background: #fff; padding: 27px; }
+.Page-Welcome-Box{ padding: 20px; padding-left: 34px; padding-right: 26px; }
+  .WELCOME-DEPARTMENT{ padding: 7px; }
+    .WELCOME-DEPARTMENT-IN{ border: 1px solid #e0e0e0; background: #fff; padding: 17px; font-size: 17px; text-align: center; }
+
+.PANEL-BOX{ padding: 7px; }
+.PANEL-BOX-IN{ border: 1px solid #e0e0e0; background: #fff; padding: 0px; font-size: 17px; text-align: center; }
+  .PANEL-BOX-FLAG{ color: #fff; padding: 11px; line-height: 22px; text-align: left; }
+  .PANEL-BOX-FLAG span{ font-size: 25px; font-weight: 600; }
+  .PANEL-BOX-CONTENT{ color: #333; padding: 13px; font-size: 21px; font-weight: 400; }
+  .PANEL-BOX-REGULAR-TITLE{ color: #333; padding: 18px; text-align: center; font-weight: 600; text-decoration: underline; }
+  .PANEL-BOX-REGULAR-CONTENT{ color: #333; padding: 15px; text-align: left; }
+  span.PANEL-BOX-DATE{ font-size: 13px; font-weight: 400; }
+
+.PANEL-LIST-TITLE{ font-size: 23px; font-weight: 400; padding:27px; color: #fff; }
+.PANEL-LIST-ALL{ padding: 17px; }
+.table-txt{ font-size: 15px; font-weight: 300px; }
+
+/**
+FORM ADD
+**/
+form.TAKE-ACTION{ padding: 0px; margin: 0px;  font-weight: 300; font-size: 17px; }
+.TAKE-ACTION-INPUT{ width: 100%; padding: 7px; font-size: 16px; font-weight: 300; margin-bottom: 8px; resize: none; }
+.TAKE-ACTION-SUBMIT{ margin-bottom: 21px; margin-top: 13px; border:0px; background: #2196f3; border-bottom: 5px solid #2f80e7; color: #fff; font-size: 16px; width: 47%; text-transform: uppercase; padding: 7px; }
+.TAKE-ACTION-SUBMIT-GALLERY{ margin-bottom: 21px; border:0px; background: #2196f3; border-bottom: 5px solid #2f80e7; color: #fff; font-size: 16px; width: 97%; text-transform: uppercase; padding: 7px; }
+/**
+FORM DELETE
+**/
+form.TAKE-ACTION-DELETE{ padding: 7px; margin: 0px;  font-weight: 300; font-size: 17px; background: #FCFDFE; }
+.TAKE-ACTION-SUBMIT-DELETE-LINK{ float: right; cursor: pointer; margin: 0px; padding: 0px; color: #f00; font-size: 14px; background: none; border: none; text-decoration: underline; }
+.TAKE-ACTION-SUBMIT-DELETE-LINK-FINISH{ cursor: pointer; margin: 0px; padding: 0px; color: #2196f3; font-size: 17px; background: none; border: none; text-decoration: underline; }
+
+/**
+WEBP CONVERT
+**/
+.WEBP-SUBMIT{ border:0px; background: #25aa2b; border-bottom: 5px solid #038809; color: #fff; font-size: 17px; padding: 7px; width: 100%; }
+/**
+SEO
+**/
+.TITLE-SUB-DEPARTMENT{ padding: 11px; padding-bottom: 13px; color: #fff; font-size: 21px; font-weight: 400; }
+  .PAGE-BOX{ background: #f7f8f9; padding-bottom: 13px; border: 4px solid #fff; }
+    .PAGE-BOX-TITLE{ padding: 11px; padding-bottom: 13px; font-size: 18px; font-weight: 400; color: #fff; }
+    .PAGE-BOX-LINK{ font-size: 17px; padding: 15px; font-weight: 300; color: #2196f3; border-bottom: 1px solid #fff; }
+      .PAGE-BOX-LINK a{ text-decoration: underline; font-weight: 300; }
+      .PAGE-BOX-LINK p{ font-size: 15px; color: #333; text-align: justify; text-decoration: none; }
+
+
+.SEO-PANEL-BOX-REGULAR-CONTENT{ color: #333; padding: 15px; text-align: left; padding-top: 0px; }
+
+
+
+
+
+
+
+
+/* The side navigation menu */
+.sidenav {
+    height: 100%; /* 100% Full-height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1000000000000000000000000000000000000000000000000; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #22243b; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+    color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+.sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+}
+
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#mainPageContent {
+    transition: margin-left .5s;
+    padding: 0px;
+    padding-top: 70px; padding-left: 70px;
+}
+#mainPageContentCover{
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  background: rgba(0,0,0,0.5);
+  z-index: 100000000000000000000000000000000000000000000000; /* Stay on top */
+  display: none;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+}
+
+/**
+410
+**/
+
+.PAGE-410-CONTAINER{ background: #fff; border: 47px solid #ebebeb; padding: 0px;  }
+.PAGE-410-CONTAINER-IN{ padding: 37px; border-bottom: 11px solid #e82042;    }
+
+.PAGE-410-FLAG{ font-size: 197px; color: #243238; font-weight: 600; line-height: 227px;  }
+.PAGE-410-CONTENT{ padding-top: 41px; }
+.PAGE-410-CONTENT-TITLE{ font-size: 14px; color: #243238; line-height: 11px; }
+h1.PAGE-410{ font-size: 27px; color: #243238; font-weight: 400; padding: 0px; margin: 0px; line-height: 24px; }
+.PAGE-410-CONTENT-TXT{ font-size: 19px; color: #243238; padding-top: 17px; text-align: justify; }
+
+.PAGE-410-SUGGEST-LOGO{ padding-top: 87px;  }
+.PAGE-410-SUGGEST-FLAG{ font-size: 157px; color: #243238; font-weight: 600;  }
+.PAGE-410-SUGGEST-CONTENT{ padding-top: 57px; }
+.PAGE-410-SUGGEST-CONTENT-TITLE{ font-size: 21px; color: #243238; font-weight: 400; }
+.PAGE-410-SUGGEST-CONTENT-TXT{ font-size: 17px; color: #243238; padding-top: 17px; line-height: 43px; }
+.PAGE-410-SUGGEST-CONTENT-TXT a{ text-decoration: underline; }
+
+.PAGE-410-CONTAINER-SUGGEST{ background: #fff; border: 47px solid #ebebeb; border-top: 0px; padding: 0px;  }
+.PAGE-410-CONTAINER-SUGGEST-IN{ padding: 37px; border-bottom: 11px solid #e82042;    }
+
+
+/**
+Page SEARCH
+**/
+.LIST-PAGE-P-ONE-ITEM-CONTAINER{ border: 1px solid #e1e2e3; background: #fff; font-size: 17px; color: #101213; font-weight: 300; margin-top:11px;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; }
+.LIST-PAGE-P-ONE-ITEM-CONTAINER:hover{ border: 1px solid #e82042; background: #fff; font-size: 17px; color: #101213; font-weight: 300; margin-top:11px;  -webkit-transition: 0.5s ease-in-out; transition: 0.5s ease-in-out; }
+
+
+	.LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING{ color: #101213; background: #f4f5f6; border: 3px solid #fff; font-size: 17px; }
+		.LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-OLD-PRICE{ background: #2E4047; color: #fff; font-size: 14px; padding: 11px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-OLD-PRICE span{ text-decoration: line-through; font-weight: 400; font-size: 16px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-OLD-PRICE-23{ padding: 11px; border-top: 1px solid #fff;border-bottom: 2px solid #fff; background: #f7f8f9; font-size: 14px; font-weight: bold; color: #4195f4;}
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-OLD-PRICE-23 span{ text-decoration: line-through; font-weight: 400; font-size: 16px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-SELLING-PRICE{ padding: 13px; font-weight: 300px; }
+    .MENTIONNED-PRICE{ font-size: 14px;  }
+    .PRICE-INT{ color: #ca1c39; font-size: 37px; font-weight: 700; }
+    .PRICE-INT-23{ color: #ca1c39; font-size: 27px; font-weight: 700; }
+    .PRICE-FLOAT{ color: #ca1c39; font-weight: 700; font-size: 17px; }
+    .PRICE-FLOAT-23{ color: #ca1c39; font-weight: 700; font-size: 14px; }
+    .MENTIONNED-PAQUET{ color:  #2E4047; font-size: 14px; line-height: 15px; }
+
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-PRICING-FORM-CART{ padding: 9px; }
+      input.ADD-TO-CART-QTE{ font-size: 14px; width: 100%; padding: 2px; margin-bottom: 11px; padding-bottom: 7px; }
+      input.ADD-TO-CART-SUBMIT{ font-size: 14px; width: 100%; padding: 5px; padding-left: 13px; background: url(https://www.automecanik.com/assets/img/icon-submit-cart.png) no-repeat top left #1ac411 ; margin-bottom: 13px; color: #fff; border: 0px; border-bottom: 3px solid #0b8205; }
+
+      button.FICHE-ARTICLE{ font-size: 14px; width: 100%; padding: 5px; background: #D1D2D3 ; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #878889; }
+button.FICHE-ARTICLE-COMP{ font-size: 14px; width: 100%; max-width: 157px; padding: 5px; background: #D1D2D3 ; margin-top: 13px; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #878889; }
+button.FICHE-ARTICLE-COMP-LIRE{ font-size: 16px; padding: 0px; background: none ; margin-top: 0px; margin-bottom: 13px; color: #2196f3; border: 0px; }
+
+  .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS{ color: #101213; border: 3px solid #fff; font-size: 17px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-TITLE{ background: #2E4047;padding: 13px; padding-bottom: 14px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-TITLE h3{ font-size: 23px; font-weight: bold; color: #fff;  line-height: 19px; padding: 0px; margin:0px; }
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-TITLE span{ font-size: 18px; font-weight: bold; }
+    span.TITLE-REF{ color: #e82042; }
+
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-TITLE-MPLUS{ background: #2E4047; color: #fff; line-height: 18px; padding: 13px; padding-bottom: 14px; font-size: 17px; font-weight: 400; }
+
+    .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-PHOTOS { padding-top: 7px; padding-bottom: 7px; }
+      .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-EQUIP-LOGO{ text-align: center; border: 1px solid  #ebebeb; background: #fff; padding: 3px; }
+      .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-EQUIP-QUALITY{ text-align: center; border: 1px solid  #ebebeb; background: #fff; padding: 19px; line-height: 15px; color: #4195f4; }
+      .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-EQUIP-QUALITY-23{ text-align: center; border: 1px solid  #fff; background: #4195f4; padding: 19px; line-height: 15px; color: #fff; }
+        .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-EQUIP-LOGO img{ max-height: 65px; }
+      .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-IMG{ text-align: center; border: 1px solid  #ebebeb; background: #fff; margin-top: 4px; padding: 7px; }
+        .LIST-PAGE-P-ONE-ITEM-CONTAINER-DATAS-IMG img{ width:100%; max-height: 230px;  }
+
+  /** MODAL **/
+  button.FICHE-ARTICLE{ font-size: 14px; width: 100%; padding: 5px; background: #D1D2D3 ; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #878889; }
+  .FICHE-ARTICLE-CRITERES-LINE{ padding: 7px; color: #101112; }
+
+  
+/** 
+MOTORISATION
+**/
+.HOME-CATALOG-FAMILY-MOBILE{ background: #fff; border: 7px solid #ebebeb; padding-top: 11px; }
+  .HOME-CATALOG-FAMILY-TITLE-MOBILE{ font-size: 27px; font-weight: 400; color: #243238; } 
+  .HOME-CATALOG-FAMILY-CONTENT-MOBILE{ text-align: justify; }
+  .HOME-CATALOG-FAMILY-PRODUCTS-MOBILE{ text-align: justify; padding:27px; }
+.PAGE-TYPE-CONTAINER-WALL{ padding: 0px; position: relative; text-align: center; background: #243238; }
+.PAGE-TYPE-CONTAINER-WALL-DATAS{ padding: 17px; line-height: 21px; padding-top: 21px; font-size: 17px; color: #101112; font-weight: 300; }
+    
+/** P CATALOG **/
+.PAGE-Z-FAMILY-CONTAINER{ background: #243238; color: #fff; padding:13px; padding-left: 21px; padding-bottom: 15px; font-size: 23px; font-weight: 400; }
+    .PAGE-Z-FAMILY-CONTAINER-LIST{ background: #6C767C; border: 1px solid #6C767C; }
+      .PAGE-Z-FAMILY-CONTAINER-LIST-ONE{ padding: 1px; border: 1px solid #6C767C; background: #fff; }
+      .PAGE-Z-FAMILY-CONTAINER-LIST-ONE-TITLE{ padding:5px; font-size: 17px; font-weight: 300; color: #101112 }
+    .PAGE-P-FAMILY-CONTAINER-LIST{ background: #6C767C; border: 2px solid #6C767C; }
+
+/** CART **/
+.PAGE-STANDARD-RIGHT-CONTAINER-FORM { padding-top: 11px; padding-bottom: 13px; font-size: 17px; line-height: 37px; }
+  h2.PAGE-STANDARD-H2 { font-size: 27px; font-weight: 400; color: #243238; line-height: 27px; margin: 0px; padding: 13px; padding-left: 0px; }
+  input.subscription-inscription-panel-area{ width: 100%; font-size: 16px; font-weight: 300; border: 1px solid #e7e8e9; margin-bottom: 7px; background: #fff; padding:7px; }
+  textarea.subscription-inscription-panel-area{ resize: none; width: 100%; font-size: 16px; font-weight: 300; border: 1px solid #e7e8e9; margin-bottom: 7px; background: #fff; padding:7px; }
+  select.subscription-inscription-panel-area{ width: 100%; font-size: 16px; font-weight: 300; border: 1px solid #e7e8e9; margin-bottom: 7px; background: #fff; padding:13px; }
+  input.subscription-inscription-panel-submit{ width: 57%; min-width: 277px; font-size: 17px; height: 42px; background: #2E4047; color: #fff; border: 0px; margin-top: 11px; border-bottom: 3px solid #243238; }
+  input.subscription-inscription-panel-submit-charte{ text-transform: uppercase; font-size: 16px; font-weight: 300px; width: 57%; min-width: 277px; background: #2E4047 ; padding: 8px; margin-top:21px; margin-bottom: 13px; color: #fff; border: 0px; border-bottom: 4px solid #242424; }
+  
+  .retour-catalog{ text-transform: uppercase; font-size: 16px; font-weight: 300px; width: 57%; min-width: 277px; 
+    background: #fff ; padding: 8px; padding-top: 7px; margin-top:21px; margin-bottom: 13px; color: #243238; text-align: center; 
+    border: 1px solid #e82042; border-bottom: 4px solid #e82042; }
+
+    
+
+.MASSDOC-HEAD-CONTAINER-MAIN-TITLE{  color:#ffffff; padding:19px; padding-left: 91px; font-size: 21px; line-height: 17px; font-weight: 400; border-bottom: 1px solid #3e8803; }
+.MASSDOC-HEAD-CONTAINER-MAIN-TITLE span{ font-size: 17px; font-weight: 300; }
+
+.MASSDOC-TOP-PANEL {  background: url('../../upload/bmw.jpg') center center/cover no-repeat #23253d; padding: 37px; text-align: center; }
+.MASSDOC-LEFT-PANEL{ background: #23253d; min-height: 100vh; }
+.MASSDOC-RIGHT-PANEL{ background: #23253d; height: 100vh; overflow: hidden; }
+
+.MASSDOC-WELCOME-PANEL{ padding: 57px; font-size: 35px; line-height: 35px; letter-spacing: 1px; font-weight: 300; text-transform: uppercase; color: #efefef; }
+.MASSDOC-WELCOME-PANEL span { font-weight: 700; font-size: 41px; }
+.MASSDOC-WELCOME-PANEL p { font-weight: 300; font-size: 15px; line-height: 14px; text-align: justify; text-transform: none; padding-top: 21px; }
+.CONNECTION-PANEL{ padding: 57px; padding-top: 0px; }
+  form { padding: 0px; margin: 0px; }
+    .CONNECTION-USER-LABEL{ text-transform: uppercase; color:#97999e; font-size: 14px;  }
+    input.CONNECTION-USER-INPUT{ border: 0px; border-bottom: 1px solid #161932; color: #fff; font-size: 14px; background:none; width: 100%; padding: 7px; }
+	input.CONNECTION-USER-CONNECT{ background: #70b809; color: #fff;  margin-top: 17px; 
+    font-size: 17px; width: 100%; border-radius: 4px; border: 0px; padding: 7px; text-transform: uppercase; font-weight: 300; cursor: pointer; }
+
+.MASSDOC-RESET-PASSWORD{ font-size: 14px; color: #cfcfcf; text-decoration: underline; text-align: right; padding-top: 11px; padding-bottom: 11px; }
+.MASSDOC-LOGO-PANEL{ position:absolute; z-index:4; top: 43%; width:100%; text-align: center; }
+
+a.MASSDOC-REDIRECT{ color: #70b809; text-decoration: underline; }
+
+.LOGIN-ERROR{ color: #b80e0e; text-align: left; font-size: 23px; padding-top: 11px; padding-bottom: 11px; }
+
+/**/
+.GRID-BOX{ background: #fff; color: #646464; border: 3px solid #ebebeb; border-radius: 5px; }
+.GRID-BOX-TITLE{ padding: 17px; color: #fff; font-weight: 300; text-transform: uppercase; font-size: 15px; }
+.GRID-BOX-TITLE span{ font-size: 12px; }
+.GRID-BOX-CONTENT{ padding: 17px; }
+
+/** REF SEARCH **/
+  .REF-SEARCH-FORM form{ padding: 0px; margin: 0px;  }
+  	.REF-SEARCH-CAR-FORM-INPUT-SELECT{ width: 100%; font-size: 15px; font-weight: 300; height: 42px; border: 1px solid #ebebeb; background: #fff; padding-left: 13px; }
+    .REF-SEARCH-FORM-INPUT-TXT{ width: 130%; font-size: 15px; font-weight: 300; height: 42px; border: 1px solid #ebebeb; background: #fff; padding-left: 13px; }
+    .REF-SEARCH-FORM-INPUT-SUBMIT{ width: 100%; font-size: 15px; height: 42px; background: #2E4047; border: 0px; border-bottom: 3px solid #243238; background: url(https://www.automecanik.com/assets/img/icon-header-search-ref-submit.png) no-repeat top center #2E4047 ; }
+
+/** LIST REF **/
+.SHOW-LIST-REF-LINE{ background: #fff; border: 2px solid #ebebeb; border-radius: 5px; font-size: 17px; }
+
+.SHOW-LIST-REF-LINE-TITLE{ background: #2196f3; text-transform: uppercase; text-align: center; padding: 13px;
+font-weight: 400; color: #fff; font-size: 17px; border-left: 1px solid #ebebeb; }
+
+.SHOW-LIST-REF-LINE-LOGO{ padding: 7px; min-height: 107px; border-left: 1px solid #ebebeb; }
+.SHOW-LIST-REF-LINE-LOGO img{ max-width:100%; max-height: 217px;   }
+.SHOW-LIST-REF-LINE-NAME-VAL{ font-weight: 400; padding: 7px; padding-top: 13px; padding-bottom: 13px; border-left: 1px solid #ebebeb; }
+  .SHOW-LIST-REF-LINE-NAME-VAL-NAME span{ color:#f57c00; text-transform: lowercase; }
+  .SHOW-LIST-REF-LINE-VAL-ECHANGE{ color: #333; font-size: 13px; padding-top: 11px; }
+  .SHOW-LIST-REF-LINE-NAME-VAL-PRICE{ font-weight: 400; font-size: 12px; }
+  span.SHOW-LIST-REF-LINE-CONSIGNE{ color: #000; }
+.SHOW-LIST-REF-LINE-NAME-VAL-CRITERIA{ font-weight: 300; padding: 7px; padding-top: 13px; padding-bottom: 13px; font-size: 17px;  border-left: 1px solid #ebebeb; }
+.SHOW-LIST-REF-LINE-NAME-CART{ font-weight: 300; padding: 7px; padding-top: 13px; padding-bottom: 13px; border-left: 1px solid #ebebeb; }
+
+.SHOW-LIST-REF-LINE-NAME-VAL-MULTI{ border-left: 1px solid #ebebeb; }
+.SHOW-LIST-REF-LINE-NAME-VAL-MULTI-IN{ font-size: 15px; font-weight: 400; padding: 7px; padding-top: 13px; padding-bottom: 13px;  border-top: 1px solid #ebebeb; }
+.SHOW-LIST-REF-LINE-NAME-VAL-MULTI-IN-WITH-BORDER{ font-size: 15px; font-weight: 400; padding: 7px; padding-top: 13px; padding-bottom: 13px;  border-top: 1px solid #ebebeb;  border-left: 1px solid #ebebeb; }
+
+
+
+.CART-CONTAINER-BOX{ font-size: 17px; color: #111213; font-weight: 300; line-height: 19px; padding: 11px; border-left:1px solid #f1f4f7;  }
+.form-validate-liv-holder{}
+.form-validate-liv-titre{ background:#f1f4f7; padding:7px; text-align:left; color:#333333; }
+.form-validate-liv{ border:1px solid #f1f4f7; padding:7px; text-align:left; }
+.form-validate-pay{ border:1px solid #f1f4f7; padding:7px; text-align:center; }
+
+/* MY ACCOUNT */
+.GRID-BOX-CONTENT-ACCOUNT { font-size: 15px; }
+.GRID-BOX-CONTENT-ACCOUNT b{ font-size: 17px; }
+.GRID-BOX-CONTENT-ACCOUNT-COL { padding-top: 11px; padding-bottom: 8px; padding-left: 21px; padding-right: 21px; border-bottom:2px solid #f1f4f7; }
+
+.MODAL-ACCOUNT-TITLE{ background: #243238; font-size: 27px; width: 100%; padding: 21px; color: #fff;  }
+
+.CART-CONTAINER-BOX-FORM-ACTION { padding: 7px; }
+a.modal-action-green{ font-size: 14px; padding: 5px; background: #25aa2b ; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #038809; color: #fff; width: 90%; display: block; }
+a.modal-action-red{ font-size: 14px; padding: 5px; background: #df1b19 ; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #b61110; color: #fff; width: 90%; display: block; }
+a.modal-action-blue{ font-size: 14px; padding: 5px; background: #2196f3 ; margin-bottom: 13px; color: #111; border: 0px; border-bottom: 3px solid #2f80e7; color: #fff; width: 90%; display: block; }
+
+a.modal-action-upgrade{ text-transform: uppercase; font-size: 16px; width: 100%; padding: 8px; background: #2E4047 ; margin-bottom: 13px; color: #fff; border: 0px; border-bottom: 4px solid #242424; display: block; float: right; }
+  
+
+.GRID-BOX-CONTENT-STOCK { font-size: 18px; }
+.GRID-BOX-CONTENT-STOCK b{ font-size: 37px; }
+
+.GRID-BOX-TITLE-STOCK{ padding: 17px; color: #fff; font-weight: 300; text-transform: uppercase; font-size: 15px; }
+.GRID-BOX-TITLE-STOCK span{ font-size: 24px; font-weight: 400; }
+
+span.SHOW-LIST-REF-LINE-DISPO-YES{ font-size: 14px; color: #000; }
+span.SHOW-LIST-REF-LINE-DISPO-YES b{ font-size: 25px; font-weight: 700; color: #25aa2b; }
+
+span.SHOW-LIST-REF-LINE-DISPO-NO{ font-size: 11px; color: #000; }
+span.SHOW-LIST-REF-LINE-DISPO-NO b{ font-size: 18px; font-weight: 700; color: #2196f3; }
+
+input.ADD-TO-CART-SUBMIT-CYAN{ font-size: 14px; width: 100%; padding: 5px; padding-left: 13px; 
+  background: url(https://www.automecanik.com/assets/img/icon-submit-cart.png) no-repeat top left #2196f3 ; 
+  margin-bottom: 13px; color: #fff; border: 0px; border-bottom: 3px solid #2f80e7; }
+input.ADD-TO-CART-SUBMIT-ORANGE{ font-size: 14px; width: 100%; padding: 5px; padding-left: 13px; 
+  background: url(https://www.automecanik.com/assets/img/icon-submit-cart.png) no-repeat top left #f57c00 ; 
+  margin-bottom: 13px; color: #fff; border: 0px; border-bottom: 3px solid #de7203; }
+
+span.PO-1-LINE-ETAT-STANDBY{ font-size: 17px; color: #2196f3; font-weight: 400; }
+span.PO-1-LINE-ETAT-RECEIVED{ font-size: 17px; color: #25aa2b; font-weight: 400; }
+span.PO-1-LINE-ETAT-DELETED{ font-size: 17px; color: #df1b19; font-weight: 400; }
+
+button.MASS-SELECT-CAR{ font-size: 17px; font-weight: 700; width: 100%; padding: 0px; background: none; color: #111; border: 0px; cursor: pointer; }
+
+.HOME-EQUIP-BLOC{ background: #fff; padding: 17px; border: 4px solid  #ebebeb; }
+			.HOME-EQUIP-BLOC-IMG{ text-align: center; }
+			.HOME-EQUIP-BLOC-TITLE{ font-size: 32px; color: #243238; line-height: 21px; padding: 17px; }
+			.HOME-EQUIP-BLOC-TXT { padding-top: 17px; }
+			.HOME-EQUIP-BLOC-TXT p{ line-height: 21px; font-size: 16px; text-align: justify; }
+
+.LIGHT-GRAY-BLOC{  background: #f4f5f6; }
+.ONE-MODEL-CONTENT-LIST-MOTORISATION-TITLE{ background: #243238; font-size: 27px; width: 100%; padding: 21px; color: #fff;  }
+                
+.D2-ALL-DATA-TECH-DATA{ font-size: 21px; font-weight: 700px; padding-bottom: 17px; text-decoration: underline; }
+
+
+
+/** HOME **/
+.MASSDOC-LOGO-PANEL-HOME{ position:absolute; z-index:4; top: 117px; width:100%; text-align: center; }
+button.LOGIN-HOME{ font-size: 18px; font-weight: 700; width: 257px; padding: 7px; background: #e82042; color: #fff; border: 0px; border-bottom: 3px solid #ca1c39; cursor: pointer; }
+
+.MASSDOC-HOME-PANEL{ font-size: 17px; font-weight: 300; text-align: center; padding: 57px; padding-bottom: 0px; }
+
+
+.MASSDOC-HOME-PANEL-TITLE{ text-transform: uppercase; font-size: 37px; font-weight: 700; text-align: center; padding-top: 37px; padding-bottom: 37px; color: #2E4047; }
+.MASSDOC-HOME-PANEL-WALL{ padding:0px; }
+.MASSDOC-HOME-PANEL-CONTENT{ padding:37px; background: #fff; }
+.MASSDOC-HOME-PANEL-CONTENT p{ text-align: justify; }
+
+.MASSDOC-HOME-PANEL-FOOTER{ text-transform: uppercase; color: #fff; font-size: 15px; background: #2E4047; padding: 17px;  }
